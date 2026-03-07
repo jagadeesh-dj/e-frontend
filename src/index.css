@@ -35,9 +35,87 @@
   * {
     @apply border-border;
   }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Fix Radix UI scroll lock hiding scrollbar */
+  body[data-scroll-locked] {
+    overflow: auto !important;
+    padding-right: 0 !important;
+  }
+
+  /* Selection color matching brand */
+  ::selection {
+    background-color: hsl(38, 92%, 50%, 0.15);
+    color: hsl(38, 92%, 30%);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(0 0% 80%);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(0 0% 65%);
+  }
+
+  /* Custom checkbox styling */
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid hsl(var(--border));
+    border-radius: 5px;
+    background: white;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  input[type="checkbox"]:hover {
+    border-color: hsl(var(--primary));
+  }
+
+  input[type="checkbox"]:checked {
+    background: hsl(var(--primary));
+    border-color: hsl(var(--primary));
+  }
+
+  input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4.5px;
+    top: 1px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  input[type="checkbox"]:focus-visible {
+    outline: none;
+    ring: 1px solid hsl(var(--primary) / 0.3);
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
   }
 }
 
@@ -47,11 +125,12 @@
   }
   
   .glass {
-    @apply bg-white/90 backdrop-blur-md border border-border/50;
+    @apply bg-white/80 backdrop-blur-xl border border-white/20;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   }
   
   .gradient-primary {
-    @apply bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500;
+    @apply bg-gradient-to-r from-orange-500 via-orange-400 to-orange-500;
   }
   
   .gradient-warm {
@@ -59,6 +138,13 @@
       radial-gradient(at 40% 20%, hsl(38, 90%, 95%) 0px, transparent 50%),
       radial-gradient(at 80% 0%, hsl(38, 80%, 90%) 0px, transparent 50%),
       radial-gradient(at 0% 50%, hsl(38, 70%, 92%) 0px, transparent 50%);
+  }
+
+  .gradient-mesh {
+    background: 
+      radial-gradient(at 0% 0%, hsl(38, 90%, 95%) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsl(38, 80%, 92%) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, hsl(38, 70%, 96%) 0px, transparent 50%);
   }
   
   .animate-stagger > * {
@@ -123,7 +209,7 @@
   }
   
   .card-premium {
-    @apply bg-white rounded-xl border border-gray-100 shadow-soft transition-all duration-300;
+    @apply bg-white rounded-2xl border border-gray-100 shadow-soft transition-all duration-300;
   }
   
   .card-premium:hover {
@@ -148,5 +234,29 @@
     background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.1) 50%, hsl(var(--muted)) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
+  }
+
+  /* Form group utility */
+  .form-group {
+    @apply space-y-2;
+  }
+
+  .form-group > label {
+    @apply block text-sm font-medium text-gray-700;
+  }
+
+  /* Divider with text */
+  .divider-text {
+    @apply relative flex items-center gap-4 my-8;
+  }
+
+  .divider-text::before,
+  .divider-text::after {
+    content: '';
+    @apply flex-1 h-px bg-gray-200;
+  }
+
+  .divider-text > span {
+    @apply text-xs font-medium uppercase tracking-wider text-gray-400;
   }
 }

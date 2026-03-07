@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { 
+import {
   Search, Eye, Mail, Calendar, ChevronLeft, ChevronRight
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
@@ -17,7 +17,7 @@ export default function AdminCustomers() {
   const itemsPerPage = 10
 
   const filteredCustomers = customers.filter(customer => {
-    const matchesSearch = 
+    const matchesSearch =
       customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -93,8 +93,8 @@ export default function AdminCustomers() {
                           </Avatar>
                           <div>
                             <p className="font-medium">
-                              {customer.first_name && customer.last_name 
-                                ? `${customer.first_name} ${customer.last_name}` 
+                              {customer.first_name && customer.last_name
+                                ? `${customer.first_name} ${customer.last_name}`
                                 : customer.username}
                             </p>
                           </div>

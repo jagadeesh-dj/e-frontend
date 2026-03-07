@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
-import { 
+import {
   Package, LayoutDashboard, ShoppingCart, UserCog, ChevronLeft, ChevronRight,
-  Search, User, LogOut, Moon, Sun, Menu, X, Tag
+  Search, User, LogOut, Menu, X, Tag, Store, Bell
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
@@ -13,7 +13,7 @@ import {
 } from '../../components/ui/dropdown-menu'
 import { useAppSelector, useAppDispatch } from '../../store/hooks'
 import { logoutUser } from '../../store/slices/authSlice'
-import { toggleTheme } from '../../store/slices/uiSlice'
+import { addToast } from '../../store/slices/uiSlice'
 import { cn } from '../../lib/utils'
 
 const sidebarItems = [
@@ -29,15 +29,13 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { user, isAuthenticated } = useAppSelector((state) => state.auth)
-  const { theme } = useAppSelector((state) => state.ui)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20)
+    const handleScroll = () => setIsScrolled(window.scrollY > 10)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -45,7 +43,6 @@ export default function AdminLayout() {
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024
-      setIsMobile(mobile)
       if (mobile) setSidebarCollapsed(true)
     }
     checkMobile()
@@ -54,9 +51,8 @@ export default function AdminLayout() {
   }, [])
 
   useEffect(() => {
-    if (theme === 'dark') document.documentElement.classList.add('dark')
-    else document.documentElement.classList.remove('dark')
-  }, [theme])
+    setIsMobileMenuOpen(false)
+  }, [location.pathname])
 
   const isActive = (href: string) => {
     if (href === '/admin') return location.pathname === '/admin'
@@ -68,118 +64,143 @@ export default function AdminLayout() {
     if (searchQuery.trim()) navigate(`/products?search=${encodeURIComponent(searchQuery)}`)
   }
 
+  const userDisplayName = user?.first_name && user?.last_name
+    ? `${user.first_name} ${user.last_name}`
+    : user?.name || 'User'
+  const userInitial = user?.first_name?.charAt(0) || user?.name?.charAt(0) || 'U'
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar - Same style as main site but fixed */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Navbar */}
       <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 bg-background border-b transition-all duration-300",
-        isScrolled ? "shadow-sm" : ""
+        "fixed top-0 left-0 right-0 z-50 bg-white border-b shadow-sm",
+        isScrolled ? "shadow-md" : ""
       )}>
-        <div className="flex items-center justify-between h-16 px-4 lg:px-8">
+        <div className="container mx-auto px-4 flex items-center justify-between h-16">
           {/* Mobile Menu Button */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="lg:hidden"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden -ml-2"
             onClick={() => setIsMobileMenuOpen(true)}
           >
-            <Menu className="w-5 h-5" />
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
           </Button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <Package className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold hidden sm:block">ShopeVerse</span>
+          <Link to="/admin" className="flex items-center gap-2">
+            <span className="text-lg font-bold text-gray-900">
+              Shopiverse
+            </span>
+            <span className="text-xs font-medium px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full">
+              Admin
+            </span>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Link to="/" className={cn(
-              "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-              location.pathname === '/' ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            )}>Home</Link>
-            <Link to="/products" className={cn(
-              "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-              location.pathname.startsWith('/products') ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            )}>Products</Link>
-            <Link to="/admin" className={cn(
-              "px-3 py-2 rounded-lg text-sm font-medium transition-colors text-primary"
-            )}>Admin</Link>
-          </nav>
+          {/* Search - Desktop */}
+          <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-md mx-8">
+            <div className="relative w-full">
+              <Input
+                type="search"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-100 border-0 rounded-lg pl-10 h-9 text-sm"
+              />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          </form>
 
           {/* Right Side */}
-          <div className="flex items-center gap-2">
-            <form onSubmit={handleSearch} className="hidden lg:block">
-              <div className="relative">
-                <Input
-                  type="search"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-48 h-9 bg-muted/50 border-0 text-sm"
-                />
-                <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              </div>
-            </form>
-
-            <Button variant="ghost" size="icon" onClick={() => dispatch(toggleTheme())}>
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </Button>
-
+          <div className="flex items-center gap-1">
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button variant="ghost" className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.avatar} alt={user?.name} />
-                      <AvatarFallback className="text-sm bg-primary/10 text-primary">
-                        {user?.name?.charAt(0) || 'U'}
+                      <AvatarImage src={user?.avatar_url || user?.avatar} alt={userDisplayName} />
+                      <AvatarFallback className="bg-orange-100 text-orange-600 font-semibold text-sm">
+                        {userInitial}
                       </AvatarFallback>
                     </Avatar>
+                    <span className="hidden sm:block text-sm font-medium text-gray-700">{userDisplayName}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col">
-                      <p className="text-sm font-medium">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-3 py-2 border-b">
+                    <p className="font-medium text-gray-900">{userDisplayName}</p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                  </div>
+                  <div className="py-1">
+                    <DropdownMenuItem onClick={() => navigate('/')} className="cursor-pointer">
+                      <Store className="w-4 h-4 mr-2" />
+                      Back to Store
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+                      <User className="w-4 h-4 mr-2" />
+                      My Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/orders')} className="cursor-pointer">
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Orders
+                    </DropdownMenuItem>
+                  </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profile')}><User className="mr-2 h-4 w-4" />Profile</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/orders')}><ShoppingCart className="mr-2 h-4 w-4" />Orders</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/admin')}><LayoutDashboard className="mr-2 h-4 w-4" />Admin Panel</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => dispatch(logoutUser())}><LogOut className="mr-2 h-4 w-4" />Logout</DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      dispatch(addToast({ type: 'info', title: 'Logged out', message: 'See you soon!' }))
+                      dispatch(logoutUser())
+                    }}
+                    className="cursor-pointer text-red-600"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Log out
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>Login</Button>
-                <Button size="sm" onClick={() => navigate('/register')}>Sign up</Button>
+                <Button size="sm" onClick={() => navigate('/register')} className="bg-orange-500 hover:bg-orange-600">Sign up</Button>
               </div>
             )}
           </div>
         </div>
+
+        {/* Mobile Search */}
+        <div className="lg:hidden px-4 pb-3">
+          <form onSubmit={handleSearch}>
+            <div className="relative">
+              <Input
+                type="search"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-100 border-0 rounded-lg pl-10 h-10 text-sm"
+              />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+          </form>
+        </div>
       </header>
 
       {/* Main Layout */}
-      <div className="flex pt-16">
+      <div className="flex pt-28 lg:pt-16">
         {/* Mobile Overlay */}
         {isMobileMenuOpen && (
-          <div 
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          <div
+            className="fixed inset-0 z-40 bg-black/30 lg:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
           />
         )}
 
         {/* Sidebar */}
         <aside className={cn(
-          "sticky top-16 h-[calc(100vh-4rem)] bg-background border-r transform transition-all duration-200 flex-shrink-0 z-50",
-          sidebarCollapsed ? "w-16" : "w-56",
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          "fixed inset-y-0 left-0 pt-16 lg:pt-16 h-screen bg-white border-r transform transition-transform duration-300 z-50 w-[280px]",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          sidebarCollapsed && "lg:w-16"
         )}>
           <div className="p-3 h-full flex flex-col">
             {/* Mobile Close */}
@@ -189,7 +210,7 @@ export default function AdminLayout() {
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            
+
             {/* Collapse Toggle */}
             <Button
               variant="ghost"
@@ -200,7 +221,7 @@ export default function AdminLayout() {
               {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
               {!sidebarCollapsed && <span className="ml-2">Collapse</span>}
             </Button>
-            
+
             {/* Nav Items */}
             <nav className="space-y-1 flex-1">
               {sidebarItems.map((item) => (
@@ -210,7 +231,7 @@ export default function AdminLayout() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium",
-                    isActive(item.href) ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    isActive(item.href) ? 'bg-orange-50 text-orange-600' : 'text-gray-600 hover:bg-gray-50',
                     sidebarCollapsed && "justify-center px-2"
                   )}
                   title={sidebarCollapsed ? item.label : undefined}
@@ -220,11 +241,22 @@ export default function AdminLayout() {
                 </Link>
               ))}
             </nav>
+
+            {/* Back to Store link at bottom */}
+            {!sidebarCollapsed && (
+              <Link
+                to="/"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors border-t border-gray-100 mt-2 pt-3"
+              >
+                <Store className="w-5 h-5 flex-shrink-0" />
+                <span>Back to Store</span>
+              </Link>
+            )}
           </div>
         </aside>
 
         {/* Content */}
-        <main className="flex-1 p-3 lg:p-4 overflow-auto min-h-[calc(100vh-4rem)]">
+        <main className="flex-1 min-w-0 p-3 lg:p-4 overflow-x-hidden min-h-[calc(100vh-4rem)]">
           <Outlet context={{ sidebarCollapsed }} />
         </main>
       </div>

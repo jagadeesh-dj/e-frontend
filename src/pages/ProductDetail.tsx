@@ -110,12 +110,12 @@ export default function ProductDetail() {
         </Link>
 
         <div className="grid lg:grid-cols-2 gap-12 mb-16">
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <motion.div
               key={selectedImage}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="aspect-square rounded-3xl overflow-hidden bg-muted"
+              className="aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-muted"
             >
               <img
                 src={product.images[selectedImage]}
@@ -123,12 +123,12 @@ export default function ProductDetail() {
                 className="w-full h-full object-cover"
               />
             </motion.div>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-4 gap-2 sm:gap-4">
               {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                  className={`aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all ${
                     selectedImage === index ? 'border-primary' : 'border-transparent'
                   }`}
                 >
@@ -138,53 +138,53 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <div>
-              <Badge variant="secondary" className="mb-3">{product.brand}</Badge>
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">{product.name}</h1>
-              <div className="flex items-center gap-4">
+              <Badge variant="secondary" className="mb-2 sm:mb-3 text-xs sm:text-sm">{product.brand}</Badge>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">{product.name}</h1>
+              <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-5 h-5 ${i < Math.floor(product.rating) ? 'fill-amber-400 text-amber-400' : 'text-muted'}`}
+                      className={`w-4 h-5 sm:w-5 ${i < Math.floor(product.rating) ? 'fill-amber-400 text-amber-400' : 'text-muted'}`}
                     />
                   ))}
                 </div>
-                <span className="text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   {product.rating} ({product.reviewCount} reviews)
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <span className="text-4xl font-bold">{formatPrice(product.price)}</span>
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              <span className="text-3xl sm:text-4xl font-bold">{formatPrice(product.price)}</span>
               {product.originalPrice && (
                 <>
-                  <span className="text-xl text-muted-foreground line-through">
+                  <span className="text-lg sm:text-xl text-muted-foreground line-through">
                     {formatPrice(product.originalPrice)}
                   </span>
-                  <Badge variant="destructive">
+                  <Badge variant="destructive" className="text-xs sm:text-sm">
                     {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
                   </Badge>
                 </>
               )}
             </div>
 
-            <p className="text-muted-foreground">{product.description}</p>
+            <p className="text-muted-foreground text-sm sm:text-base">{product.description}</p>
 
-            <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl">
-              <div className="flex items-center gap-2">
-                <Truck className="w-5 h-5 text-primary" />
-                <span className="text-sm">Free Shipping</span>
+            <div className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-muted/30 rounded-xl overflow-x-auto">
+              <div className="flex items-center gap-2 min-w-fit">
+                <Truck className="w-4 h-5 sm:w-5 text-primary" />
+                <span className="text-xs sm:text-sm whitespace-nowrap">Free Shipping</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-primary" />
-                <span className="text-sm">Secure Payment</span>
+              <div className="flex items-center gap-2 min-w-fit">
+                <Shield className="w-4 h-5 sm:w-5 text-primary" />
+                <span className="text-xs sm:text-sm whitespace-nowrap">Secure Payment</span>
               </div>
-              <div className="flex items-center gap-2">
-                <RotateCcw className="w-5 h-5 text-primary" />
-                <span className="text-sm">30-Day Returns</span>
+              <div className="flex items-center gap-2 min-w-fit">
+                <RotateCcw className="w-4 h-5 sm:w-5 text-primary" />
+                <span className="text-xs sm:text-sm whitespace-nowrap">30-Day Returns</span>
               </div>
             </div>
 
@@ -265,13 +265,13 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        <div className="mb-16">
-          <div className="flex gap-4 border-b mb-8">
+        <div className="mb-12 sm:mb-16">
+          <div className="flex gap-2 sm:gap-4 border-b mb-6 sm:mb-8 overflow-x-auto">
             {(['description', 'reviews', 'shipping'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-3 font-medium capitalize transition-colors relative ${
+                className={`px-3 sm:px-4 py-2 sm:py-3 font-medium capitalize transition-colors relative whitespace-nowrap ${
                   activeTab === tab ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
@@ -396,24 +396,24 @@ export default function ProductDetail() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="grid md:grid-cols-3 gap-6"
+                className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"
               >
-                <Card className="p-6">
-                  <Truck className="w-8 h-8 text-primary mb-4" />
+                <Card className="p-4 sm:p-6">
+                  <Truck className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-3 sm:mb-4" />
                   <h4 className="font-semibold mb-2">Free Shipping</h4>
                   <p className="text-sm text-muted-foreground">
                     Free standard shipping on orders over $50. Express options available at checkout.
                   </p>
                 </Card>
-                <Card className="p-6">
-                  <RotateCcw className="w-8 h-8 text-primary mb-4" />
+                <Card className="p-4 sm:p-6">
+                  <RotateCcw className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-3 sm:mb-4" />
                   <h4 className="font-semibold mb-2">Easy Returns</h4>
                   <p className="text-sm text-muted-foreground">
                     Not satisfied? Return any item within 30 days for a full refund.
                   </p>
                 </Card>
-                <Card className="p-6">
-                  <Shield className="w-8 h-8 text-primary mb-4" />
+                <Card className="p-4 sm:p-6">
+                  <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-3 sm:mb-4" />
                   <h4 className="font-semibold mb-2">Secure Payment</h4>
                   <p className="text-sm text-muted-foreground">
                     Your payment information is encrypted and secure with SSL technology.
@@ -426,8 +426,8 @@ export default function ProductDetail() {
 
         {relatedProducts.length > 0 && (
           <section>
-            <h2 className="text-2xl font-bold mb-8">Related Products</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <h2 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Related Products</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {relatedProducts.map((product) => (
                 <Link key={product.id} to={`/products/${product.id}`}>
                   <Card hover className="overflow-hidden group">

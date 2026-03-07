@@ -10,6 +10,7 @@ import Home from './pages/Home'
 import About from './pages/About'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
 import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
@@ -24,6 +25,7 @@ import AdminCategories from './pages/admin/AdminCategories'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminCustomers from './pages/admin/AdminCustomers'
 import AdminLayout from './pages/admin/AdminLayout'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAppSelector((state) => state.auth)
@@ -59,7 +61,8 @@ function AppContent() {
           <Route path="wishlist" element={<Wishlist />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
-          
+          <Route path="forgot-password" element={<ForgotPassword />} />
+
           <Route path="checkout" element={
             <ProtectedRoute>
               <Checkout />
@@ -81,7 +84,7 @@ function AppContent() {
             </ProtectedRoute>
           } />
         </Route>
-        
+
         <Route path="/admin" element={
           <AdminRoute>
             <AdminLayout />
@@ -102,9 +105,11 @@ function AppContent() {
 function App() {
   return (
     <Provider store={store}>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </ErrorBoundary>
     </Provider>
   )
 }

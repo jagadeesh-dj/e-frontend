@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Package, Plus, Pencil, Trash2, Search, Image, ChevronLeft, ChevronRight
@@ -18,6 +18,9 @@ import { mockAdminProducts } from '../../data/mockData'
 import { addToast } from '../../store/slices/uiSlice'
 import { formatPrice } from '../../lib/utils'
 import { useAppDispatch } from '../../store/hooks'
+import api from '../../services/api'
+import { handleApiError } from '../../utils/apiErrorHandler'
+import { fileToBase64 } from '../../utils/fileToBase64'
 
 interface ProductFormData {
   name: string
@@ -27,6 +30,34 @@ interface ProductFormData {
   category: string
   brand: string
   image_url: string
+}
+
+interface PaginationMeta {
+  page: number
+  page_size: number
+  total: number
+  total_pages: number
+  has_next: boolean
+  has_prev: boolean
+}
+
+interface PaginatedApiResponse<T> {
+  success: boolean
+  message: string
+  data: T
+  pagination: PaginationMeta
+}
+
+interface CategoryApi {
+  id: number
+  name: string
+  slug: string
+  children?: CategoryApi[]
+}
+
+interface CategoryOption {
+  name: string
+  label: string
 }
 
 const initialFormData: ProductFormData = {
@@ -39,9 +70,22 @@ const initialFormData: ProductFormData = {
   image_url: '',
 }
 
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+const DEFAULT_PAGE_SIZE = 7
+
+const flattenCategoryOptions = (nodes: CategoryApi[], parentLabel = ''): CategoryOption[] =>
+  nodes.flatMap((node) => {
+    const label = parentLabel ? `${parentLabel} / ${node.name}` : node.name
+    return [
+      { name: node.name, label },
+      ...flattenCategoryOptions(node.children || [], label),
+    ]
+  })
+
 export default function AdminProducts() {
   const dispatch = useAppDispatch()
   const [products, setProducts] = useState(mockAdminProducts)
+  const [apiCategories, setApiCategories] = useState<CategoryOption[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -50,9 +94,62 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState<typeof mockAdminProducts[0] | null>(null)
   const [deletingProduct, setDeletingProduct] = useState<typeof mockAdminProducts[0] | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [isCategoryLoading, setIsCategoryLoading] = useState(false)
   const itemsPerPage = 10
 
-  const categories = [...new Set(products.map(p => p.category).filter(Boolean))]
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsCategoryLoading(true)
+      try {
+        let page = 1
+        let hasNext = true
+        const collected: CategoryOption[] = []
+
+        while (hasNext) {
+          const response = await api.get<PaginatedApiResponse<CategoryApi[]>>('/categories/tree', {
+            params: {
+              page,
+              page_size: DEFAULT_PAGE_SIZE,
+            },
+          })
+
+          collected.push(...flattenCategoryOptions(response.data.data || []))
+          hasNext = response.data.pagination?.has_next || false
+          page += 1
+        }
+
+        const uniqueByName = new Map<string, string>()
+        collected.forEach((category) => {
+          if (!uniqueByName.has(category.name)) {
+            uniqueByName.set(category.name, category.label)
+          }
+        })
+
+        setApiCategories(
+          Array.from(uniqueByName.entries()).map(([name, label]) => ({
+            name,
+            label,
+          }))
+        )
+      } catch (error) {
+        handleApiError(error, dispatch, 'Failed to fetch category menu')
+      } finally {
+        setIsCategoryLoading(false)
+      }
+    }
+
+    void fetchCategories()
+  }, [dispatch])
+
+  const categoryOptions = useMemo(() => {
+    if (apiCategories.length > 0) {
+      return apiCategories
+    }
+    return [...new Set(products.map((product) => product.category).filter(Boolean))].map((name) => ({
+      name,
+      label: name,
+    }))
+  }, [apiCategories, products])
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -126,6 +223,26 @@ export default function AdminProducts() {
     setIsDialogOpen(true)
   }
 
+  const handleImageUpload = async (file: File | undefined) => {
+    if (!file) return
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      dispatch(
+        addToast({
+          type: 'error',
+          title: 'Image too large',
+          message: 'Please upload an image smaller than 5MB.',
+        })
+      )
+      return
+    }
+    try {
+      const base64 = await fileToBase64(file)
+      setFormData((prev) => ({ ...prev, image_url: base64 }))
+    } catch (error) {
+      handleApiError(error, dispatch, 'Failed to encode image as base64')
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -157,8 +274,10 @@ export default function AdminProducts() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                {categoryOptions.map((category) => (
+                  <SelectItem key={category.label} value={category.name}>
+                    {category.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -361,12 +480,17 @@ export default function AdminProducts() {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Electronics">Electronics</SelectItem>
-                      <SelectItem value="Fashion">Fashion</SelectItem>
-                      <SelectItem value="Home & Living">Home & Living</SelectItem>
-                      <SelectItem value="Beauty">Beauty</SelectItem>
-                      <SelectItem value="Sports">Sports</SelectItem>
-                      <SelectItem value="Books">Books</SelectItem>
+                      {categoryOptions.length === 0 ? (
+                        <SelectItem value="no-categories" disabled>
+                          {isCategoryLoading ? 'Loading categories...' : 'No categories available'}
+                        </SelectItem>
+                      ) : (
+                        categoryOptions.map((category) => (
+                          <SelectItem key={category.label} value={category.name}>
+                            {category.label}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -380,14 +504,25 @@ export default function AdminProducts() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="image_url">Image URL</Label>
+                <Label htmlFor="image_url">Product Image (Upload)</Label>
                 <Input
                   id="image_url"
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => void handleImageUpload(e.target.files?.[0])}
                 />
+                {formData.image_url && (
+                  <div className="space-y-2">
+                    <img
+                      src={formData.image_url}
+                      alt="Product preview"
+                      className="w-20 h-20 rounded-md border object-cover"
+                    />
+                    <p className="text-xs text-muted-foreground break-all">
+                      {formData.image_url.slice(0, 80)}...
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter>

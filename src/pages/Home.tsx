@@ -53,55 +53,55 @@ export default function Home() {
 
   return (
     <div>
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-amber-50 via-white to-amber-50/50">
+      <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-amber-50 via-white to-amber-50/50">
         <div className="absolute inset-0 gradient-warm pointer-events-none" />
         
         <div className="container mx-auto px-4 relative">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
-              className="space-y-8"
+              className="space-y-6"
             >
-              <Badge variant="secondary" className="text-sm px-4 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200">
+              <Badge variant="secondary" className="text-xs sm:text-sm px-3 sm:px-4 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200">
                 New Collection 2024
               </Badge>
-              <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-gray-900">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-gray-900">
                 Discover
                 <span className="text-primary"> Premium </span>
                 Products
               </h1>
-              <p className="text-xl text-gray-600 max-w-lg leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-lg leading-relaxed">
                 Curated selection of premium products for the modern lifestyle. 
                 Quality craftsmanship meets contemporary design.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3 sm:gap-4">
                 <Link to="/products">
-                  <Button size="xl" className="gap-2 btn-premium shadow-premium hover:shadow-premium-lg">
+                  <Button size="lg" className="gap-2 btn-premium shadow-premium hover:shadow-premium-lg text-sm sm:text-base">
                     Shop Now
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
                 <Link to="/products?category=electronics">
-                  <Button size="xl" variant="outline" className="border-gray-300 hover:border-primary hover:bg-amber-50">
+                  <Button size="lg" variant="outline" className="border-gray-300 hover:border-primary hover:bg-amber-50 text-sm sm:text-base">
                     Explore Electronics
                   </Button>
                 </Link>
               </div>
               
-              <div className="flex items-center gap-8 pt-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">50K+</div>
-                  <div className="text-sm text-gray-500">Happy Customers</div>
+              <div className="flex items-center gap-4 sm:gap-8 pt-2 sm:pt-4 overflow-x-auto">
+                <div className="text-center min-w-fit">
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">50K+</div>
+                  <div className="text-xs sm:text-sm text-gray-500">Happy Customers</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">1000+</div>
-                  <div className="text-sm text-gray-500">Products</div>
+                <div className="text-center min-w-fit">
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">1000+</div>
+                  <div className="text-xs sm:text-sm text-gray-500">Products</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-900">4.9</div>
-                  <div className="text-sm text-gray-500">Rating</div>
+                <div className="text-center min-w-fit">
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">4.9</div>
+                  <div className="text-xs sm:text-sm text-gray-500">Rating</div>
                 </div>
               </div>
             </motion.div>
@@ -180,7 +180,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {featuredProducts.map((product, index) => (
               <motion.div
                 key={product.id}
@@ -324,13 +324,13 @@ export default function Home() {
           <p className="text-white/80 mb-8 max-w-2xl mx-auto">
             Get the latest updates on new products and upcoming sales. No spam, just the good stuff.
           </p>
-          <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+          <form className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-md mx-auto">
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
+              className="flex-1 h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-base"
             />
-            <Button size="lg" variant="secondary">
+            <Button size="lg" variant="secondary" className="whitespace-nowrap">
               Subscribe
             </Button>
           </form>

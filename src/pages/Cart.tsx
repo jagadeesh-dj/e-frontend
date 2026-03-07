@@ -74,10 +74,10 @@ export default function Cart() {
 
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8 text-gray-900">Shopping Cart</h1>
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-gray-900">Shopping Cart</h1>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
           <div className="lg:col-span-2 space-y-4">
             <AnimatePresence>
               {items.map((item) => (
@@ -87,35 +87,35 @@ export default function Cart() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -100 }}
                 >
-                  <Card className="card-premium p-4">
-                    <div className="flex gap-4">
-                      <Link to={`/products/${item.product.id}`} className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+                  <Card className="card-premium p-3 sm:p-4">
+                    <div className="flex gap-3 sm:gap-4">
+                      <Link to={`/products/${item.product.id}`} className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
                         <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
                       </Link>
                       <div className="flex-1 min-w-0">
-                        <Link to={`/products/${item.product.id}`} className="font-semibold text-gray-900 hover:text-primary transition-colors line-clamp-1">
+                        <Link to={`/products/${item.product.id}`} className="font-semibold text-gray-900 hover:text-primary transition-colors line-clamp-1 text-sm sm:text-base">
                           {item.product.name}
                         </Link>
-                        <p className="text-sm text-gray-500">{item.product.brand}</p>
-                        <p className="font-bold mt-2 text-gray-900">{formatPrice(item.product.price)}</p>
+                        <p className="text-xs sm:text-sm text-gray-500">{item.product.brand}</p>
+                        <p className="font-bold mt-1 sm:mt-2 text-gray-900 text-sm sm:text-base">{formatPrice(item.product.price)}</p>
                       </div>
-                      <div className="flex flex-col items-end justify-between">
+                      <div className="flex flex-col items-end justify-between gap-2">
                         <button
                           onClick={() => removeItem(item.id)}
-                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-red-500 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center gap-2 border border-gray-200 rounded-lg">
-                          <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, -1)} className="h-8 w-8">
-                            <Minus className="w-4 h-4" />
+                        <div className="flex items-center gap-1 sm:gap-2 border border-gray-200 rounded-lg">
+                          <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, -1)} className="h-7 w-7 sm:h-8 sm:w-8">
+                            <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                           </Button>
-                          <span className="w-8 text-center font-medium text-gray-900">{item.quantity}</span>
-                          <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, 1)} className="h-8 w-8">
-                            <Plus className="w-4 h-4" />
+                          <span className="w-6 sm:w-8 text-center font-medium text-gray-900 text-sm">{item.quantity}</span>
+                          <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, 1)} className="h-7 w-7 sm:h-8 sm:w-8">
+                            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                           </Button>
                         </div>
-                        <div className="font-bold text-gray-900">
+                        <div className="font-bold text-gray-900 text-sm sm:text-base">
                           {formatPrice(item.product.price * item.quantity)}
                         </div>
                       </div>
@@ -127,8 +127,8 @@ export default function Cart() {
           </div>
 
           <div className="lg:col-span-1">
-            <Card className="card-premium p-6 sticky top-24">
-              <h2 className="text-xl font-bold mb-6 text-gray-900">Order Summary</h2>
+            <Card className="card-premium p-4 sm:p-6 sticky top-24">
+              <h2 className="text-xl font-bold mb-4 sm:mb-6 text-gray-900">Order Summary</h2>
 
               {!appliedPromo && (
                 <div className="flex gap-2 mb-6">

@@ -109,10 +109,10 @@ export default function Products() {
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className={`
             lg:w-72 flex-shrink-0
-            ${showFilters ? 'block' : 'hidden lg:block'}
+            ${showFilters ? 'fixed inset-0 z-50 lg:relative lg:block' : 'hidden lg:block'}
           `}>
-            <Card className="p-6 sticky top-24 card-premium">
-              <div className="flex items-center justify-between mb-6">
+            <Card className="p-4 sm:p-6 sticky top-24 card-premium h-full lg:h-auto overflow-y-auto">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <h3 className="font-semibold text-lg text-gray-900">Filters</h3>
                 <Button 
                   variant="ghost" 
@@ -124,7 +124,7 @@ export default function Products() {
                 </Button>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Search</label>
                   <div className="relative">
@@ -188,6 +188,12 @@ export default function Products() {
                 </Button>
               </div>
             </Card>
+            {showFilters && (
+              <div 
+                className="fixed inset-0 bg-black/50 lg:hidden -z-10"
+                onClick={() => setShowFilters(false)}
+              />
+            )}
           </aside>
 
           <div className="flex-1">
@@ -219,9 +225,9 @@ export default function Products() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48 bg-gray-50 border-gray-200 focus:border-primary">
+                  <SelectTrigger className="w-36 sm:w-48 bg-gray-50 border-gray-200 focus:border-primary">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -309,8 +315,8 @@ function ProductCard({ product, viewMode }: { product: Product; viewMode: 'grid'
   if (viewMode === 'list') {
     return (
       <Card hover className="card-premium overflow-hidden" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
-        <div className="flex">
-          <div className="w-48 h-48 flex-shrink-0 relative overflow-hidden bg-gray-100">
+        <div className="flex flex-col sm:flex-row">
+          <div className="w-full sm:w-32 md:w-40 lg:w-48 h-48 sm:h-32 md:h-40 lg:h-48 flex-shrink-0 relative overflow-hidden bg-gray-100">
             <img
               src={product.images[0]}
               alt={product.name}
@@ -320,21 +326,21 @@ function ProductCard({ product, viewMode }: { product: Product; viewMode: 'grid'
           </div>
           <div className="flex-1 p-4 flex flex-col justify-between">
             <div>
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="font-semibold text-lg text-gray-900 line-clamp-1">{product.name}</h3>
+                  <h3 className="font-semibold text-base sm:text-lg text-gray-900 line-clamp-1">{product.name}</h3>
                   <p className="text-sm text-gray-500">{product.brand}</p>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                   <span className="text-sm font-medium text-gray-700">{product.rating}</span>
                 </div>
               </div>
               <p className="text-sm text-gray-500 mt-2 line-clamp-2">{product.description}</p>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-xl text-gray-900">{formatPrice(product.price)}</span>
+                <span className="font-bold text-lg sm:text-xl text-gray-900">{formatPrice(product.price)}</span>
                 {product.originalPrice && (
                   <span className="text-sm text-gray-400 line-through">
                     {formatPrice(product.originalPrice)}
@@ -367,9 +373,9 @@ function ProductCard({ product, viewMode }: { product: Product; viewMode: 'grid'
                   )}
                 </Button>
                 <Link to={`/products/${product.id}`}>
-                  <Button className="btn-premium">
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    View
+                  <Button className="btn-premium text-sm">
+                    <ShoppingCart className="w-4 h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">View</span>
                   </Button>
                 </Link>
               </div>
