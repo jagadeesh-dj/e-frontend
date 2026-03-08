@@ -100,7 +100,7 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen pb-20">
-      <div className="container mx-auto px-4 py-8">
+      <div className="app-container py-8">
         <Link
           to="/products"
           className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors"
@@ -458,3 +458,5 @@ export default function ProductDetail() {
     </div>
   )
 }
+
+

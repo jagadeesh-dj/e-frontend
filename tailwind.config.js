@@ -8,7 +8,7 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1rem",
       screens: {
         "2xl": "1400px",
       },
@@ -73,8 +73,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Inter", "system-ui", "sans-serif"],
+        sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
+        display: ['"Playfair Display"', '"Plus Jakarta Sans"', "serif"],
       },
       keyframes: {
         "accordion-down": {
@@ -139,8 +139,10 @@ export default {
         soft: "0 2px 10px rgba(0, 0, 0, 0.05)",
         "soft-lg": "0 10px 40px rgba(0, 0, 0, 0.1)",
         "soft-xl": "0 20px 60px rgba(0, 0, 0, 0.12)",
-        premium: "0 4px 20px rgba(217, 119, 6, 0.15)",
-        "premium-lg": "0 8px 30px rgba(217, 119, 6, 0.2)",
+        premium: "0 10px 30px rgba(194, 128, 64, 0.22)",
+        "premium-lg": "0 18px 48px rgba(194, 128, 64, 0.28)",
+        "surface-sm": "0 1px 3px rgba(130, 89, 48, 0.08), 0 8px 24px rgba(130, 89, 48, 0.08)",
+        "surface-md": "0 2px 6px rgba(130, 89, 48, 0.08), 0 16px 40px rgba(130, 89, 48, 0.12)",
       },
     },
   },

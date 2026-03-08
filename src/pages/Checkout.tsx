@@ -187,13 +187,13 @@ export default function Checkout() {
     <div className="min-h-screen pb-16 sm:pb-20">
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50/50 py-6 sm:py-10 border-b border-gray-100">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Checkout</h1>
           <p className="text-gray-500 text-sm sm:text-base">Complete your order securely</p>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 sm:py-8">
+      <div className="app-container py-6 sm:py-8">
         <StepIndicator step={step} />
 
         <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
@@ -520,3 +520,5 @@ export default function Checkout() {
     </div>
   )
 }
+
+

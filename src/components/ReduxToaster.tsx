@@ -131,7 +131,7 @@ export function ReduxToaster() {
   if (!visibleToasts.length) return null
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+    <div className="fixed bottom-6 right-6 z-[80] flex flex-col gap-3">
       <AnimatePresence mode="popLayout">
         {visibleToasts.map((toast) => (
           <ToastItem 

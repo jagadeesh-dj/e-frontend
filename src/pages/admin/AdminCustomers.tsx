@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Search, Eye, Mail, Calendar, ChevronLeft, ChevronRight
+  Search, Eye, Mail, Calendar, ChevronLeft, ChevronRight, FileSpreadsheet
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
@@ -9,12 +9,16 @@ import { Badge } from '../../components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { mockAdminCustomers } from '../../data/mockData'
 import { User } from '../../types'
+import { downloadCsv } from '../../utils/csv'
+import { useAppDispatch } from '../../store/hooks'
+import { addToast } from '../../store/slices/uiSlice'
 
 export default function AdminCustomers() {
+  const dispatch = useAppDispatch()
   const [customers] = useState(mockAdminCustomers)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const itemsPerPage = 6
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch =
@@ -31,6 +35,49 @@ export default function AdminCustomers() {
     currentPage * itemsPerPage
   )
 
+  const handleExportCustomers = () => {
+    if (filteredCustomers.length === 0) {
+      dispatch(
+        addToast({
+          type: 'info',
+          title: 'No data to export',
+          message: 'There are no customers to export.',
+        })
+      )
+      return
+    }
+
+    const exportRows = filteredCustomers.map((customer) => ({
+      id: customer.id,
+      first_name: customer.first_name || '',
+      last_name: customer.last_name || '',
+      email: customer.email || '',
+      username: customer.username || '',
+      role: customer.role || '',
+      status: customer.is_active ? 'Active' : 'Inactive',
+      joined_at: customer.created_at ? new Date(customer.created_at).toLocaleDateString() : '',
+    }))
+
+    downloadCsv('customers_export.csv', exportRows, [
+      'id',
+      'first_name',
+      'last_name',
+      'email',
+      'username',
+      'role',
+      'status',
+      'joined_at',
+    ])
+
+    dispatch(
+      addToast({
+        type: 'success',
+        title: 'Export complete',
+        message: 'Customers exported successfully.',
+      })
+    )
+  }
+
   const getInitials = (user: User) => {
     if (user.first_name && user.last_name) {
       return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
@@ -45,10 +92,20 @@ export default function AdminCustomers() {
           <h1 className="text-2xl font-bold">Customers</h1>
           <p className="text-muted-foreground">Manage your customers</p>
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleExportCustomers}
+          className="h-10 w-10 p-0 sm:w-auto sm:px-4"
+          aria-label="Export customers"
+        >
+          <FileSpreadsheet className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Export Excel</span>
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="card-premium">
+        <CardHeader className="px-6 py-5">
           <div className="relative w-full sm:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -59,8 +116,8 @@ export default function AdminCustomers() {
             />
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
+        <CardContent className="px-6 pb-6 pt-0">
+          <div className="table-shell">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
@@ -189,3 +246,4 @@ export default function AdminCustomers() {
     </div>
   )
 }
+

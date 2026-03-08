@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
@@ -8,7 +8,7 @@ import {
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-import { mockDashboardStats, mockSalesData, mockRecentOrders } from '../data/mockData'
+import { mockSalesData, mockRecentOrders } from '../data/mockData'
 import { formatPrice } from '../lib/utils'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 import { mockAdminProducts, mockAdminOrders, mockAdminCustomers } from '../data/mockData'
@@ -44,12 +44,14 @@ export default function AdminDashboard() {
   ]
 
   const [recentOrdersPage, setRecentOrdersPage] = useState(1)
-  const ordersPerPage = 5
+  const ordersPerPage = 6
   const totalOrderPages = Math.ceil(mockRecentOrders.length / ordersPerPage)
   const paginatedRecentOrders = mockRecentOrders.slice(
     (recentOrdersPage - 1) * ordersPerPage,
     recentOrdersPage * ordersPerPage
   )
+  const cardHeaderClass = 'px-6 py-5'
+  const cardContentClass = 'px-6 pb-6 pt-0'
 
   return (
     <div>
@@ -68,8 +70,8 @@ export default function AdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card>
-              <CardContent className="p-6">
+            <Card className="card-premium h-full">
+              <CardHeader className={cardHeaderClass}>
                 <div className="flex items-center justify-between">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                     <stat.icon className="w-6 h-6 text-primary" />
@@ -79,7 +81,9 @@ export default function AdminDashboard() {
                     {Math.abs(stat.change)}%
                   </div>
                 </div>
-                <div className="mt-4">
+              </CardHeader>
+              <CardContent className={cardContentClass}>
+                <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">{stat.title}</p>
                   <p className="text-2xl font-bold">{stat.value}</p>
                 </div>
@@ -90,11 +94,11 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        <Card>
-          <CardHeader>
+        <Card className="card-premium">
+          <CardHeader className={cardHeaderClass}>
             <CardTitle>Revenue Overview</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className={cardContentClass}>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={mockSalesData}>
@@ -127,11 +131,11 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="card-premium">
+          <CardHeader className={cardHeaderClass}>
             <CardTitle>Orders by Month</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className={cardContentClass}>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockSalesData}>
@@ -153,15 +157,15 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="card-premium">
+        <CardHeader className={cardHeaderClass}>
           <div className="flex items-center justify-between">
             <CardTitle>Recent Orders</CardTitle>
             <Button variant="outline" size="sm" onClick={() => navigate('/admin/orders')}>View All</Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
+        <CardContent className={cardContentClass}>
+          <div className="table-shell">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
@@ -251,3 +255,4 @@ export default function AdminDashboard() {
     </div>
   )
 }
+

@@ -47,11 +47,11 @@ const team = [
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32 overflow-hidden bg-gradient-to-br from-amber-50 via-white to-amber-50/50">
         <div className="absolute inset-0 gradient-warm pointer-events-none" />
-        <div className="container mx-auto px-4 relative">
+        <div className="app-container relative">
           <div className="max-w-3xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -82,7 +82,7 @@ export default function About() {
 
       {/* Stats Section */}
       <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <motion.div
@@ -103,7 +103,7 @@ export default function About() {
 
       {/* Story Section */}
       <section className="py-16 lg:py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold mb-6 text-gray-900">Our Story</h2>
@@ -159,7 +159,7 @@ export default function About() {
 
       {/* Features Section */}
       <section className="py-16 lg:py-24 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4 text-gray-900">Why Choose Us</h2>
             <p className="text-gray-500 max-w-2xl mx-auto">
@@ -192,7 +192,7 @@ export default function About() {
 
       {/* Team Section */}
       <section className="py-16 lg:py-24 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4 text-gray-900">Meet Our Team</h2>
             <p className="text-gray-500 max-w-2xl mx-auto">
@@ -231,7 +231,7 @@ export default function About() {
 
       {/* CTA Section */}
       <section className="py-16 lg:py-24 bg-gradient-to-r from-amber-500 to-amber-600">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-4 text-white">Get In Touch</h2>
             <p className="text-white/80 mb-8">
@@ -253,3 +253,5 @@ export default function About() {
     </div>
   )
 }
+
+

@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Plus,
   Pencil,
@@ -9,6 +9,8 @@ import {
   ChevronRight,
   ChevronDown,
   Loader2,
+  Upload,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardHeader } from '../../components/ui/card'
@@ -16,6 +18,7 @@ import { Input } from '../../components/ui/input'
 import { Badge } from '../../components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog'
 import { Label } from '../../components/ui/label'
+import { Textarea } from '../../components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -29,6 +32,7 @@ import api from '../../services/api'
 import { ApiResponse } from '../../types'
 import { handleApiError } from '../../utils/apiErrorHandler'
 import { fileToBase64 } from '../../utils/fileToBase64'
+import { downloadCsv, getCsvField, parseCsv } from '../../utils/csv'
 
 interface PaginationMeta {
   page: number
@@ -68,16 +72,20 @@ interface CategoryRow extends Omit<CategoryTreeNode, 'children'> {
 interface CategoryFormData {
   name: string
   slug: string
+  description: string
+  sort_order: string
   image_url: string
   parent_id: string
 }
 
-const DEFAULT_PAGE_SIZE = 7
+const DEFAULT_PAGE_SIZE = 6
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 
 const initialFormData: CategoryFormData = {
   name: '',
   slug: '',
+  description: '',
+  sort_order: '0',
   image_url: '',
   parent_id: 'none',
 }
@@ -158,9 +166,12 @@ export default function AdminCategories() {
   const [deletingCategory, setDeletingCategory] = useState<CategoryRow | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isBulkUploading, setIsBulkUploading] = useState(false)
   const [expandedCategoryIds, setExpandedCategoryIds] = useState<Set<number>>(new Set())
+  const bulkUploadInputRef = useRef<HTMLInputElement>(null)
 
   const parentOptions = useMemo(() => flattenTreeForOptions(categoryTree), [categoryTree])
+  const allCategoryRows = useMemo(() => flattenTreeForOptions(categoryTree), [categoryTree])
   const isSearchActive = searchQuery.trim().length > 0
   const rows = useMemo(
     () => flattenTreeForTable(categoryTree, expandedCategoryIds, isSearchActive),
@@ -230,6 +241,10 @@ export default function AdminCategories() {
     const payload = {
       name: formData.name.trim(),
       slug: (formData.slug || generateSlug(formData.name)).trim(),
+      description: formData.description.trim() || null,
+      sort_order: Number.isNaN(Number(formData.sort_order))
+        ? 0
+        : Number(formData.sort_order),
       image_url: formData.image_url || null,
       parent_id: typeof parentId === 'number' && !Number.isNaN(parentId) ? parentId : null,
     }
@@ -312,6 +327,8 @@ export default function AdminCategories() {
     setFormData({
       name: category.name,
       slug: category.slug,
+      description: category.description || '',
+      sort_order: String(category.sort_order ?? 0),
       image_url: category.image_url || '',
       parent_id: category.parent_id ? String(category.parent_id) : 'none',
     })
@@ -365,6 +382,124 @@ export default function AdminCategories() {
     }
   }
 
+  const handleBulkUpload = async (file: File | undefined) => {
+    if (!file) return
+
+    setIsBulkUploading(true)
+    try {
+      const text = await file.text()
+      const rowsToImport = parseCsv(text)
+
+      if (rowsToImport.length === 0) {
+        dispatch(
+          addToast({
+            type: 'error',
+            title: 'Invalid CSV',
+            message: 'No valid rows found in the uploaded file.',
+          })
+        )
+        return
+      }
+
+      let createdCount = 0
+      let failedCount = 0
+
+      for (const row of rowsToImport) {
+        const name = getCsvField(row, 'name').trim()
+        if (!name) {
+          failedCount += 1
+          continue
+        }
+
+        const parentValue = getCsvField(row, 'parent_id').trim()
+        const parsedParentId = Number(parentValue)
+        const sortOrderValue = Number(getCsvField(row, 'sort_order').trim() || '0')
+
+        const payload = {
+          name,
+          slug: getCsvField(row, 'slug').trim() || generateSlug(name),
+          description: getCsvField(row, 'description').trim() || null,
+          sort_order: Number.isNaN(sortOrderValue) ? 0 : sortOrderValue,
+          image_url: getCsvField(row, 'image_url').trim() || null,
+          parent_id:
+            parentValue && parentValue.toLowerCase() !== 'none' && !Number.isNaN(parsedParentId)
+              ? parsedParentId
+              : null,
+        }
+
+        try {
+          await api.post<ApiResponse<CategoryTreeNode>>('/categories/', payload)
+          createdCount += 1
+        } catch {
+          failedCount += 1
+        }
+      }
+
+      await loadCategories(currentPage, searchQuery)
+      dispatch(
+        addToast({
+          type: failedCount > 0 ? 'warning' : 'success',
+          title: 'Category bulk upload complete',
+          message: `Created ${createdCount} categories${failedCount > 0 ? `, failed ${failedCount}` : ''}.`,
+        })
+      )
+    } catch (error) {
+      handleApiError(error, dispatch, 'Failed to process bulk upload file')
+    } finally {
+      setIsBulkUploading(false)
+      if (bulkUploadInputRef.current) {
+        bulkUploadInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleExportCategories = () => {
+    if (allCategoryRows.length === 0) {
+      dispatch(
+        addToast({
+          type: 'info',
+          title: 'No data to export',
+          message: 'There are no categories to export.',
+        })
+      )
+      return
+    }
+
+    const exportRows = allCategoryRows.map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description || '',
+      sort_order: category.sort_order ?? 0,
+      parent_id: category.parent_id ?? '',
+      parent_name: category.parent_name || '',
+      level: category.level,
+      status: category.is_active ? 'Active' : 'Inactive',
+      created_at: category.created_at ? new Date(category.created_at).toLocaleDateString() : '',
+    }))
+
+    downloadCsv('categories_export.csv', exportRows, [
+      'id',
+      'name',
+      'slug',
+      'description',
+      'sort_order',
+      'parent_id',
+      'parent_name',
+      'level',
+      'status',
+      'created_at',
+    ])
+
+    dispatch(
+      addToast({
+        type: 'success',
+        title: 'Export complete',
+        message: 'Categories exported successfully.',
+      })
+    )
+  }
+
   const formatDate = (value?: string) => {
     if (!value) return '-'
     const parsed = new Date(value)
@@ -382,14 +517,52 @@ export default function AdminCategories() {
           <h1 className="text-2xl font-bold">Categories</h1>
           <p className="text-muted-foreground">Manage categories and subcategories</p>
         </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Category
-        </Button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <input
+            ref={bulkUploadInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => void handleBulkUpload(e.target.files?.[0])}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => bulkUploadInputRef.current?.click()}
+            disabled={isBulkUploading}
+            className="h-10 w-10 p-0 sm:w-auto sm:px-4"
+            aria-label="Bulk upload categories"
+          >
+            {isBulkUploading ? (
+              <Loader2 className="w-4 h-4 animate-spin sm:mr-2" />
+            ) : (
+              <Upload className="w-4 h-4 sm:mr-2" />
+            )}
+            <span className="hidden sm:inline">Bulk Upload</span>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleExportCategories}
+            className="h-10 w-10 p-0 sm:w-auto sm:px-4"
+            aria-label="Export categories"
+          >
+            <FileSpreadsheet className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export Excel</span>
+          </Button>
+          <Button
+            onClick={openCreateDialog}
+            className="h-10 w-10 p-0 sm:w-auto sm:px-4"
+            aria-label="Add category"
+          >
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Add Category</span>
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="card-premium">
+        <CardHeader className="px-6 py-5">
           <div className="relative w-full sm:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -403,8 +576,8 @@ export default function AdminCategories() {
             />
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
+        <CardContent className="px-6 pb-6 pt-0">
+          <div className="table-shell">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
@@ -500,7 +673,7 @@ export default function AdminCategories() {
                           </Badge>
                         </td>
                         <td className="py-3 px-4 text-sm text-muted-foreground">
-                          {formatDate(category.created_at)}
+                          {category.created_at ? new Date(category.created_at).toLocaleDateString() : '-'}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-end gap-2">
@@ -583,12 +756,13 @@ export default function AdminCategories() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="w-[calc(100%-1rem)] sm:w-full max-w-2xl p-0 overflow-hidden">
+          <DialogHeader className="border-b px-6 py-5">
             <DialogTitle>{editingCategory ? 'Edit Category' : 'Add New Category'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
+          <form onSubmit={handleSubmit} className="flex max-h-[82vh] flex-col">
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="name">Category Name *</Label>
                 <Input
@@ -606,6 +780,26 @@ export default function AdminCategories() {
                   value={formData.slug}
                   onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
                   placeholder="e.g., electronics"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="sort_order">Sort Order</Label>
+                <Input
+                  id="sort_order"
+                  type="number"
+                  value={formData.sort_order}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, sort_order: e.target.value }))}
+                  placeholder="0"
+                />
+              </div>
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                  placeholder="Short description for this category"
+                  rows={3}
                 />
               </div>
               <div className="grid gap-2">
@@ -653,7 +847,8 @@ export default function AdminCategories() {
                 )}
               </div>
             </div>
-            <DialogFooter>
+            </div>
+            <DialogFooter className="border-t px-6 py-4">
               <Button
                 type="button"
                 variant="outline"
@@ -709,3 +904,4 @@ export default function AdminCategories() {
     </div>
   )
 }
+

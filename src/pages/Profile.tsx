@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  User, Package, MapPin, ChevronLeft, Mail,
+  User, Package, MapPin, Mail,
   Phone, Loader2, Camera, Save, Calendar, Edit3, Plus, Trash2,
   Lock, Settings, Shield, Bell, BellOff, Eye, EyeOff, AlertTriangle, ChevronRight
 } from 'lucide-react'
@@ -163,7 +163,6 @@ export default function Profile() {
         bio: formData.bio || undefined,
       })).unwrap()
 
-      dispatch(addToast({ type: 'success', title: 'Profile Updated', message: 'Your profile has been updated successfully' }))
       setIsEditing(false)
       dispatch(fetchUser())
       dispatch(fetchProfile())
@@ -280,25 +279,8 @@ export default function Profile() {
   const userRoleLabel = user?.role === 'superadmin' ? 'Super Admin' : isAdmin ? 'Admin' : 'Customer'
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-4 h-16">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="hover:bg-gray-100"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <h1 className="text-xl font-bold text-gray-900">My Account</h1>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen">
+      <div className="app-container py-8">
         {/* Mobile horizontal tabs */}
         <div className="lg:hidden mb-6 -mx-4 px-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">

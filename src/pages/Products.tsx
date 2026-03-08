@@ -99,13 +99,13 @@ export default function Products() {
   return (
     <div className="min-h-screen">
       <section className="bg-gradient-to-r from-amber-50 via-white to-amber-50/50 py-12">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">All Products</h1>
           <p className="text-gray-500">Browse our complete collection</p>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="app-container py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className={`
             lg:w-72 flex-shrink-0
@@ -463,3 +463,5 @@ function ProductCard({ product, viewMode }: { product: Product; viewMode: 'grid'
     </Card>
   )
 }
+
+

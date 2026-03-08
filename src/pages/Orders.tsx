@@ -50,7 +50,7 @@ export default function Orders() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
           <Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" />
           <p className="text-gray-500 mt-4">Loading your orders...</p>
@@ -61,7 +61,7 @@ export default function Orders() {
 
   if (orders.length === 0 && !isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Package className="w-12 h-12 text-gray-400" />
@@ -80,15 +80,15 @@ export default function Orders() {
   }
 
   return (
-    <div className="min-h-screen pb-20 bg-gray-50">
+    <div className="min-h-screen pb-20">
       <div className="bg-gradient-to-r from-amber-50 to-white py-12">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
           <p className="text-gray-500 mt-2">Track and manage your orders</p>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="app-container py-8">
         {/* Filters & Search */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           {/* Status filter tabs */}
@@ -190,3 +190,6 @@ export default function Orders() {
     </div>
   )
 }
+
+
+

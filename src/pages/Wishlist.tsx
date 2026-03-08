@@ -23,7 +23,7 @@ export default function Wishlist() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <motion.div
             initial={{ scale: 0 }}
@@ -48,15 +48,15 @@ export default function Wishlist() {
   }
 
   return (
-    <div className="min-h-screen pb-20 bg-gray-50">
+    <div className="min-h-screen pb-20">
       <div className="bg-gradient-to-r from-amber-50 to-white py-12">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <h1 className="text-3xl font-bold text-gray-900">My Wishlist</h1>
           <p className="text-gray-500 mt-2">{items.length} saved items</p>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="app-container py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <AnimatePresence>
             {items.map((product) => (
@@ -128,3 +128,5 @@ export default function Wishlist() {
     </div>
   )
 }
+
+

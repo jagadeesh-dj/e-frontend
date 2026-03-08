@@ -27,7 +27,7 @@ export default function ForgotPassword() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
             {/* Background decorations */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute -top-[25%] -left-[10%] w-[50%] h-[50%] rounded-full bg-amber-400/10 blur-[120px]" />
@@ -136,3 +136,4 @@ export default function ForgotPassword() {
         </div>
     )
 }
+

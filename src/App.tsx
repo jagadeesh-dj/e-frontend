@@ -24,6 +24,7 @@ import AdminProducts from './pages/admin/AdminProducts'
 import AdminCategories from './pages/admin/AdminCategories'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminCustomers from './pages/admin/AdminCustomers'
+import AdminCRM from './pages/admin/AdminCRM'
 import AdminLayout from './pages/admin/AdminLayout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
@@ -95,6 +96,7 @@ function AppContent() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="customers" element={<AdminCustomers />} />
+          <Route path="crm" element={<AdminCRM />} />
         </Route>
       </Routes>
       <ReduxToaster />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Search, Eye, Truck, CheckCircle, XCircle, Clock, Package as PackageIcon, ChevronLeft, ChevronRight
+  Search, Eye, Truck, CheckCircle, XCircle, Clock, Package as PackageIcon, ChevronLeft, ChevronRight, FileSpreadsheet
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
@@ -11,6 +11,9 @@ import {
 } from '../../components/ui/select'
 import { mockAdminOrders } from '../../data/mockData'
 import { formatPrice } from '../../lib/utils'
+import { downloadCsv } from '../../utils/csv'
+import { useAppDispatch } from '../../store/hooks'
+import { addToast } from '../../store/slices/uiSlice'
 
 const statusColors: Record<string, "success" | "warning" | "outline" | "default" | "destructive" | "secondary"> = {
   pending: 'warning',
@@ -29,11 +32,12 @@ const statusIcons: Record<string, React.ReactNode> = {
 }
 
 export default function AdminOrders() {
+  const dispatch = useAppDispatch()
   const [orders] = useState(mockAdminOrders)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const itemsPerPage = 6
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch =
@@ -50,6 +54,49 @@ export default function AdminOrders() {
     currentPage * itemsPerPage
   )
 
+  const handleExportOrders = () => {
+    if (filteredOrders.length === 0) {
+      dispatch(
+        addToast({
+          type: 'info',
+          title: 'No data to export',
+          message: 'There are no orders to export.',
+        })
+      )
+      return
+    }
+
+    const exportRows = filteredOrders.map((order) => ({
+      order_id: order.id,
+      order_number: order.orderNumber || '',
+      customer_id: order.user_id,
+      items_count: order.items?.length || 0,
+      total: order.total_amount || order.total || 0,
+      payment_status: order.payment_status || '',
+      order_status: order.status || '',
+      created_at: order.created_at ? new Date(order.created_at).toLocaleDateString() : '',
+    }))
+
+    downloadCsv('orders_export.csv', exportRows, [
+      'order_id',
+      'order_number',
+      'customer_id',
+      'items_count',
+      'total',
+      'payment_status',
+      'order_status',
+      'created_at',
+    ])
+
+    dispatch(
+      addToast({
+        type: 'success',
+        title: 'Export complete',
+        message: 'Orders exported successfully.',
+      })
+    )
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -57,10 +104,20 @@ export default function AdminOrders() {
           <h1 className="text-2xl font-bold">Orders</h1>
           <p className="text-muted-foreground">Manage customer orders</p>
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleExportOrders}
+          className="h-10 w-10 p-0 sm:w-auto sm:px-4"
+          aria-label="Export orders"
+        >
+          <FileSpreadsheet className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Export Excel</span>
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="card-premium">
+        <CardHeader className="px-6 py-5">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="relative w-full sm:w-64">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -86,8 +143,8 @@ export default function AdminOrders() {
             </Select>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
+        <CardContent className="px-6 pb-6 pt-0">
+          <div className="table-shell">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
@@ -201,3 +258,4 @@ export default function AdminOrders() {
     </div>
   )
 }
+

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Shield, Truck, CreditCard, RotateCcw, Star, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Button } from '../components/ui/button'
@@ -39,8 +39,36 @@ const testimonials = [
   },
 ]
 
+const promoSlides = [
+  {
+    title: 'Premium Gift Drops With Up To 50% Off',
+    subtitle: 'Explore curated cakes, flowers, and personalized gift boxes designed for every occasion.',
+    image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=1800&auto=format&fit=crop&q=80',
+    primaryCta: { label: 'Shop Deals', href: '/products' },
+    secondaryCta: { label: 'View Combos', href: '/products?category=combos' },
+    badge: 'Mega Promo Collection',
+  },
+  {
+    title: 'Same-Day Celebration Essentials',
+    subtitle: 'Order fresh flowers, gourmet cakes, and gift bundles before noon for same-day delivery.',
+    image: 'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?w=1800&auto=format&fit=crop&q=80',
+    primaryCta: { label: 'Order Now', href: '/products?category=flowers' },
+    secondaryCta: { label: 'Browse Cakes', href: '/products?category=cakes' },
+    badge: 'Express Delivery',
+  },
+  {
+    title: 'Personalized Gifts For Every Moment',
+    subtitle: 'Create custom mugs, frames, and handcrafted keepsakes with premium finishes.',
+    image: 'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=1800&auto=format&fit=crop&q=80',
+    primaryCta: { label: 'Customize Gifts', href: '/products?category=personalized' },
+    secondaryCta: { label: 'Explore Catalog', href: '/products' },
+    badge: 'Limited Edition',
+  },
+]
+
 export default function Home() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0)
+  const [currentPromo, setCurrentPromo] = useState(0)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -49,101 +77,135 @@ export default function Home() {
     return () => clearInterval(timer)
   }, [])
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentPromo((prev) => (prev + 1) % promoSlides.length)
+    }, 4500)
+    return () => clearInterval(timer)
+  }, [])
+
   const featuredProducts = mockProducts.slice(0, 6)
+  const currentSlide = promoSlides[currentPromo]
+  const goToPrevPromo = () => setCurrentPromo((prev) => (prev - 1 + promoSlides.length) % promoSlides.length)
+  const goToNextPromo = () => setCurrentPromo((prev) => (prev + 1) % promoSlides.length)
 
   return (
     <div>
-      <section className="relative min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-amber-50 via-white to-amber-50/50">
-        <div className="absolute inset-0 gradient-warm pointer-events-none" />
-        
-        <div className="container mx-auto px-4 relative">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="space-y-6"
-            >
-              <Badge variant="secondary" className="text-xs sm:text-sm px-3 sm:px-4 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200">
-                New Collection 2024
-              </Badge>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-gray-900">
-                Discover
-                <span className="text-primary"> Premium </span>
-                Products
-              </h1>
-              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-lg leading-relaxed">
-                Curated selection of premium products for the modern lifestyle. 
-                Quality craftsmanship meets contemporary design.
-              </p>
-              <div className="flex flex-wrap gap-3 sm:gap-4">
-                <Link to="/products">
-                  <Button size="lg" className="gap-2 btn-premium shadow-premium hover:shadow-premium-lg text-sm sm:text-base">
-                    Shop Now
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-                <Link to="/products?category=electronics">
-                  <Button size="lg" variant="outline" className="border-gray-300 hover:border-primary hover:bg-amber-50 text-sm sm:text-base">
-                    Explore Electronics
-                  </Button>
-                </Link>
-              </div>
-              
-              <div className="flex items-center gap-4 sm:gap-8 pt-2 sm:pt-4 overflow-x-auto">
-                <div className="text-center min-w-fit">
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">50K+</div>
-                  <div className="text-xs sm:text-sm text-gray-500">Happy Customers</div>
-                </div>
-                <div className="text-center min-w-fit">
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">1000+</div>
-                  <div className="text-xs sm:text-sm text-gray-500">Products</div>
-                </div>
-                <div className="text-center min-w-fit">
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">4.9</div>
-                  <div className="text-xs sm:text-sm text-gray-500">Rating</div>
-                </div>
-              </div>
-            </motion.div>
+      <section className="app-section pt-5 sm:pt-6">
+        <div className="app-container">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55 }}
+            className="relative isolate overflow-hidden rounded-[2rem] border border-white/70 shadow-surface-md"
+          >
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentSlide.image}
+                initial={{ opacity: 0, scale: 1.06 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.03 }}
+                transition={{ duration: 0.65, ease: 'easeOut' }}
+                src={currentSlide.image}
+                alt="Promo Banner"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            </AnimatePresence>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#1e1912]/85 via-[#2f2518]/55 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative hidden lg:block"
-            >
-              <div className="relative w-full aspect-square">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-100 via-transparent to-amber-50 rounded-full blur-3xl" />
-                <img
-                  src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800"
-                  alt="Featured Product"
-                  className="relative z-10 w-full h-full object-cover rounded-3xl shadow-soft-xl"
-                />
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                  className="absolute -right-8 top-1/4 z-20 bg-white rounded-2xl p-4 shadow-soft-lg border border-gray-100"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-premium">
-                      <Truck className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-900">Free Shipping</div>
-                      <div className="text-xs text-gray-500">On orders $50+</div>
-                    </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentPromo}
+                initial={{ opacity: 0, x: 42 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -42 }}
+                transition={{ duration: 0.42, ease: 'easeOut' }}
+                className="relative flex min-h-[430px] flex-col justify-end px-6 py-8 text-white sm:min-h-[520px] sm:px-10 sm:py-10 lg:min-h-[620px] lg:px-14"
+              >
+                <Badge className="mb-5 w-fit bg-white/15 text-white backdrop-blur-md" size="lg">
+                  {currentSlide.badge}
+                </Badge>
+                <h1 className="max-w-3xl text-3xl font-bold leading-tight sm:text-5xl lg:text-6xl">
+                  {currentSlide.title}
+                </h1>
+                <p className="mt-4 max-w-2xl text-sm text-white/85 sm:text-lg">
+                  {currentSlide.subtitle}
+                </p>
+
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <Link to={currentSlide.primaryCta.href}>
+                    <Button size="lg" className="btn-premium gap-2">
+                      {currentSlide.primaryCta.label}
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link to={currentSlide.secondaryCta.href}>
+                    <Button size="lg" variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
+                      {currentSlide.secondaryCta.label}
+                    </Button>
+                  </Link>
+                </div>
+
+                <div className="mt-8 grid w-full max-w-xl grid-cols-3 gap-3 text-center sm:gap-4">
+                  <div className="rounded-xl border border-white/20 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-lg font-bold sm:text-2xl">50K+</p>
+                    <p className="text-[11px] uppercase tracking-[0.08em] text-white/80 sm:text-xs">Happy Customers</p>
                   </div>
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
+                  <div className="rounded-xl border border-white/20 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-lg font-bold sm:text-2xl">1000+</p>
+                    <p className="text-[11px] uppercase tracking-[0.08em] text-white/80 sm:text-xs">Curated Products</p>
+                  </div>
+                  <div className="rounded-xl border border-white/20 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-lg font-bold sm:text-2xl">4.9</p>
+                    <p className="text-[11px] uppercase tracking-[0.08em] text-white/80 sm:text-xs">Customer Rating</p>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
 
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent" />
+            <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between p-4 sm:p-5">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+                onClick={goToPrevPromo}
+                aria-label="Previous promo slide"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+                onClick={goToNextPromo}
+                aria-label="Next promo slide"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur-sm">
+              {promoSlides.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => setCurrentPromo(index)}
+                  aria-label={`Go to promo slide ${index + 1}`}
+                  className={`h-2 rounded-full transition-all ${
+                    index === currentPromo ? 'w-8 bg-white' : 'w-2 bg-white/45 hover:bg-white/70'
+                  }`}
+                />
+              ))}
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <motion.div
@@ -166,7 +228,7 @@ export default function Home() {
       </section>
 
       <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <div className="flex items-end justify-between mb-12">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Products</h2>
@@ -231,7 +293,7 @@ export default function Home() {
       </section>
 
       <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Shop by Category</h2>
             <p className="text-gray-500">Explore our curated collections</p>
@@ -266,7 +328,7 @@ export default function Home() {
       </section>
 
       <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
+        <div className="app-container">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">What Our Customers Say</h2>
             <p className="text-gray-500">Join thousands of satisfied customers</p>
@@ -317,7 +379,7 @@ export default function Home() {
       </section>
 
       <section className="py-20 bg-gradient-to-r from-amber-500 to-amber-600">
-        <div className="container mx-auto px-4 text-center">
+        <div className="app-container text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Subscribe to Our Newsletter
           </h2>
@@ -339,3 +401,4 @@ export default function Home() {
     </div>
   )
 }
+
