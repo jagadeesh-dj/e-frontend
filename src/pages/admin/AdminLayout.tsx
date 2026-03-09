@@ -136,7 +136,7 @@ export default function AdminLayout() {
                 </div>
               </Link>
             </div>
-
+{/* 
             <form onSubmit={handleSearch} className="hidden flex-1 max-w-md lg:flex">
               <div className="relative w-full">
                 <Input
@@ -148,7 +148,7 @@ export default function AdminLayout() {
                 />
                 <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               </div>
-            </form>
+            </form> */}
 
             <div className="flex items-center gap-2">
               {isAuthenticated ? (
@@ -193,7 +193,7 @@ export default function AdminLayout() {
             </div>
           </div>
 
-          <form onSubmit={handleSearch} className="pb-3 lg:hidden">
+          {/* <form onSubmit={handleSearch} className="pb-3 lg:hidden">
             <div className="relative">
               <Input
                 type="search"
@@ -204,7 +204,7 @@ export default function AdminLayout() {
               />
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             </div>
-          </form>
+          </form> */}
         </div>
       </header>
 
