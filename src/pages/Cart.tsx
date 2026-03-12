@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Truck } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Truck, Palette, Image } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import { Input } from '../components/ui/input'
+import { Badge } from '../components/ui/badge'
 import { mockProducts } from '../data/mockData'
 import { formatPrice } from '../lib/utils'
 import { useAppSelector } from '../store/hooks'
@@ -89,14 +90,27 @@ export default function Cart() {
                 >
                   <Card className="card-premium p-3 sm:p-4">
                     <div className="flex gap-3 sm:gap-4">
-                      <Link to={`/products/${item.product.id}`} className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+                      <Link to={`/products/${item.product.id}`} className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 relative">
                         <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
+                        {(item.product as any).custom_design && (
+                          <div className="absolute top-1 right-1">
+                            <Badge className="bg-blue-500 text-white text-xs">
+                              <Palette className="w-3 h-3" />
+                            </Badge>
+                          </div>
+                        )}
                       </Link>
                       <div className="flex-1 min-w-0">
                         <Link to={`/products/${item.product.id}`} className="font-semibold text-gray-900 hover:text-primary transition-colors line-clamp-1 text-sm sm:text-base">
                           {item.product.name}
                         </Link>
                         <p className="text-xs sm:text-sm text-gray-500">{item.product.brand}</p>
+                        {(item.product as any).custom_design && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <Palette className="w-3 h-3 text-blue-500" />
+                            <span className="text-xs text-blue-600 font-medium">Customized Design</span>
+                          </div>
+                        )}
                         <p className="font-bold mt-1 sm:mt-2 text-gray-900 text-sm sm:text-base">{formatPrice(item.product.price)}</p>
                       </div>
                       <div className="flex flex-col items-end justify-between gap-2">

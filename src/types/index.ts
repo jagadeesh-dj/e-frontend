@@ -105,12 +105,17 @@ export interface Product {
   reviewCount: number
   stock: number
   is_active?: boolean
+  is_customizable?: boolean
   variants?: ProductVariant[]
   features?: string[]
   tags?: string[]
   sku?: string
   created_at: string
   updatedAt?: string
+  custom_design?: any
+  design_preview?: string
+  canvas_size?: number
+  print_area?: { width: number; height: number }
 }
 
 export interface ProductVariant {

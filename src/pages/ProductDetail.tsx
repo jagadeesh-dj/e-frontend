@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ShoppingCart, Heart, Star, Truck, Shield, RotateCcw, Check, Minus, Plus, Send } from 'lucide-react'
+import { ArrowLeft, ShoppingCart, Heart, Star, Truck, Shield, RotateCcw, Check, Minus, Plus, Send, Palette } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -16,6 +16,7 @@ import { addToast } from '../store/slices/uiSlice'
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { items: wishlistItems } = useAppSelector((state) => state.wishlist)
   const { user } = useAppSelector((state) => state.auth)
@@ -220,25 +221,37 @@ export default function ProductDetail() {
               </div>
 
               <div className="flex gap-3">
-                <Button
-                  size="xl"
-                  className="flex-1"
-                  onClick={handleAddToCart}
-                  loading={isAdding}
-                  disabled={product.stock === 0}
-                >
-                  {added ? (
-                    <>
-                      <Check className="w-5 h-5 mr-2" />
-                      Added to Cart
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="w-5 h-5 mr-2" />
-                      Add to Cart
-                    </>
-                  )}
-                </Button>
+                {(product as any).is_customizable ? (
+                  <Button
+                    size="xl"
+                    className="flex-1 gap-2"
+                    variant="secondary"
+                    onClick={() => navigate(`/customize/${product.id}`)}
+                  >
+                    <Palette className="w-5 h-5" />
+                    Customize Now
+                  </Button>
+                ) : (
+                  <Button
+                    size="xl"
+                    className="flex-1"
+                    onClick={handleAddToCart}
+                    loading={isAdding}
+                    disabled={product.stock === 0}
+                  >
+                    {added ? (
+                      <>
+                        <Check className="w-5 h-5 mr-2" />
+                        Added to Cart
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-5 h-5 mr-2" />
+                        Add to Cart
+                      </>
+                    )}
+                  </Button>
+                )}
                 <Button variant="outline" size="xl" onClick={handleWishlistToggle}>
                   {isInWishlist ? (
                     <Heart className="w-5 h-5 text-red-500 fill-red-500" />
@@ -247,6 +260,30 @@ export default function ProductDetail() {
                   )}
                 </Button>
               </div>
+
+              {(product as any).is_customizable && (
+                <div className="pt-4">
+                  <Button
+                    size="xl"
+                    className="w-full"
+                    onClick={handleAddToCart}
+                    loading={isAdding}
+                    disabled={product.stock === 0}
+                  >
+                    {added ? (
+                      <>
+                        <Check className="w-5 h-5 mr-2" />
+                        Added to Cart
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-5 h-5 mr-2" />
+                        Add to Cart
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
 
             {product.features && (
