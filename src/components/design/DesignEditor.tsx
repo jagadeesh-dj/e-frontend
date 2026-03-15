@@ -1,5 +1,18 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle, Ref } from 'react'
-import * as fabric from 'fabric'
+
+interface CanvasObject {
+  id: string
+  type: 'text' | 'image'
+  x: number
+  y: number
+  width: number
+  height: number
+  content?: string
+  imageData?: string
+  fontSize?: number
+  fill?: string
+  selected?: boolean
+}
 
 interface DesignEditorProps {
   canvasWidth?: number
@@ -21,67 +34,82 @@ export interface DesignEditorRef {
 const DesignEditor = forwardRef<DesignEditorRef, DesignEditorProps>(
   ({ canvasWidth = 400, canvasHeight = 400, backgroundColor = '#ffffff', onCanvasReady }, ref: Ref<DesignEditorRef>) => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const fabricCanvasRef = useRef<any>(null)
+    const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null)
+    const canvasObjectsRef = useRef<CanvasObject[]>([])
+    const selectedObjectRef = useRef<string | null>(null)
     const [isCanvasReady, setIsCanvasReady] = useState(false)
     const initializedRef = useRef(false)
 
-    // Initialize Fabric canvas
+    const redrawCanvas = () => {
+      const ctx = canvasContextRef.current
+      if (!ctx) return
+
+      // Clear canvas with background color
+      ctx.fillStyle = backgroundColor
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+
+      // Draw objects
+      canvasObjectsRef.current.forEach((obj) => {
+        if (obj.type === 'text') {
+          ctx.font = `${obj.fontSize || 16}px Arial`
+          ctx.fillStyle = obj.fill || '#1f2937'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(obj.content || '', obj.x, obj.y)
+        } else if (obj.type === 'image' && obj.imageData) {
+          const img = new Image()
+          img.onload = () => {
+            ctx.drawImage(img, obj.x - obj.width / 2, obj.y - obj.height / 2, obj.width, obj.height)
+            if (obj.selected) {
+              ctx.strokeStyle = '#3b82f6'
+              ctx.lineWidth = 2
+              ctx.strokeRect(obj.x - obj.width / 2, obj.y - obj.height / 2, obj.width, obj.height)
+            }
+          }
+          img.src = obj.imageData
+        }
+
+        // Draw selection border
+        if (obj.selected) {
+          ctx.strokeStyle = '#3b82f6'
+          ctx.lineWidth = 2
+          ctx.setLineDash([4, 4])
+          if (obj.type === 'text') {
+            const textWidth = ctx.measureText(obj.content || '').width
+            ctx.strokeRect(obj.x - textWidth / 2 - 5, obj.y - (obj.fontSize || 16) / 2 - 5, textWidth + 10, (obj.fontSize || 16) + 10)
+          }
+          ctx.setLineDash([])
+        }
+      })
+    }
+
+    // Initialize canvas
     useEffect(() => {
       if (!canvasRef.current || initializedRef.current) return
 
-      // Check if canvas already has a Fabric instance
-      const existingCanvas = (canvasRef.current as any).__fabric
-      if (existingCanvas) {
-        existingCanvas.dispose()
-      }
+      const ctx = canvasRef.current.getContext('2d')
+      if (!ctx) return
 
-      // Create Fabric canvas
-      const canvas = new (fabric as any).Canvas(canvasRef.current, {
-        width: canvasWidth,
-        height: canvasHeight,
-        backgroundColor,
-        selection: true,
-        preserveObjectStacking: true,
-      })
+      canvasRef.current.width = canvasWidth
+      canvasRef.current.height = canvasHeight
+      canvasContextRef.current = ctx
 
-      // Configure default object properties
-      ;(fabric as any).Object.prototype.set({
-        transparentCorners: false,
-        cornerColor: '#ffffff',
-        cornerStrokeColor: '#3b82f6',
-        borderColor: '#3b82f6',
-        cornerSize: 12,
-        padding: 5,
-        cornerStyle: 'circle',
-        borderDashArray: [4, 4],
-      })
+      // Draw initial guide text
+      ctx.fillStyle = backgroundColor
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+      ctx.font = '16px Arial'
+      ctx.fillStyle = '#9ca3af'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('Double-click to edit', canvasWidth / 2, canvasHeight / 2)
 
-      fabricCanvasRef.current = canvas
       setIsCanvasReady(true)
       initializedRef.current = true
 
-      // Notify parent that canvas is ready
-      onCanvasReady?.(canvas)
+      // Notify parent
+      onCanvasReady?.(canvasRef.current)
 
-      // Add initial text guide
-      const guideText = new (fabric as any).Text('Double-click to edit', {
-        left: canvasWidth / 2,
-        top: canvasHeight / 2,
-        originX: 'center',
-        originY: 'center',
-        fontSize: 16,
-        fill: '#9ca3af',
-        selectable: false,
-        evented: false,
-      })
-      canvas.add(guideText)
-      canvas.sendObjectToBack(guideText)
-
-      // Cleanup on unmount
       return () => {
-        if (canvas) {
-          canvas.dispose()
-        }
         initializedRef.current = false
       }
     }, []) // Empty dependency array - only initialize once
@@ -89,61 +117,35 @@ const DesignEditor = forwardRef<DesignEditorRef, DesignEditorProps>(
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
       get canvas() {
-        return fabricCanvasRef.current
+        return canvasRef.current
       },
 
       addText: (text = 'Your Text') => {
-        const canvas = fabricCanvasRef.current
-        if (!canvas) return
-
-        // Remove guide text if it exists
-        const objects = canvas.getObjects()
-        const guideText = objects.find((obj: any) =>
-          obj.type === 'text' &&
-          obj.text === 'Double-click to edit' &&
-          obj.fill === '#9ca3af'
-        )
-        if (guideText) {
-          canvas.remove(guideText)
-        }
-
-        const newText = new (fabric as any).IText(text, {
-          left: canvasWidth / 2,
-          top: canvasHeight / 2,
-          originX: 'center',
-          originY: 'center',
+        const newObj: CanvasObject = {
+          id: Math.random().toString(),
+          type: 'text',
+          x: canvasWidth / 2,
+          y: canvasHeight / 2,
+          width: 0,
+          height: 32,
+          content: text,
           fontSize: 32,
-          fontFamily: 'Arial',
           fill: '#1f2937',
-          fontWeight: 'bold',
-        })
-
-        canvas.add(newText)
-        canvas.setActiveObject(newText)
-        canvas.renderAll()
+          selected: true,
+        }
+        canvasObjectsRef.current.forEach((obj) => (obj.selected = false))
+        canvasObjectsRef.current.push(newObj)
+        selectedObjectRef.current = newObj.id
+        redrawCanvas()
       },
 
       addImage: async (file: File) => {
-        const canvas = fabricCanvasRef.current
-        if (!canvas) return
-
         return new Promise((resolve, reject) => {
           const reader = new FileReader()
           reader.onload = (f) => {
-            const data = f.target?.result as string
-            ;(fabric as any).Image.fromURL(data, (img: any) => {
-              // Remove guide text if it exists
-              const objects = canvas.getObjects()
-              const guideText = objects.find((obj: any) =>
-                obj.type === 'text' &&
-                obj.text === 'Double-click to edit' &&
-                obj.fill === '#9ca3af'
-              )
-              if (guideText) {
-                canvas.remove(guideText)
-              }
-
-              // Scale image to fit canvas
+            const imageData = f.target?.result as string
+            const img = new Image()
+            img.onload = () => {
               const maxWidth = canvasWidth * 0.8
               const maxHeight = canvasHeight * 0.8
               let scale = 1
@@ -152,22 +154,23 @@ const DesignEditor = forwardRef<DesignEditorRef, DesignEditorProps>(
                 scale = Math.min(maxWidth / img.width, maxHeight / img.height)
               }
 
-              img.set({
-                left: canvasWidth / 2,
-                top: canvasHeight / 2,
-                originX: 'center',
-                originY: 'center',
-                scaleX: scale,
-                scaleY: scale,
-              })
-
-              canvas.add(img)
-              canvas.setActiveObject(img)
-              canvas.renderAll()
+              const newObj: CanvasObject = {
+                id: Math.random().toString(),
+                type: 'image',
+                x: canvasWidth / 2,
+                y: canvasHeight / 2,
+                width: img.width * scale,
+                height: img.height * scale,
+                imageData,
+                selected: true,
+              }
+              canvasObjectsRef.current.forEach((obj) => (obj.selected = false))
+              canvasObjectsRef.current.push(newObj)
+              selectedObjectRef.current = newObj.id
+              redrawCanvas()
               resolve()
-            }, {
-              crossOrigin: 'anonymous'
-            })
+            }
+            img.src = imageData
           }
           reader.onerror = reject
           reader.readAsDataURL(file)
@@ -175,55 +178,44 @@ const DesignEditor = forwardRef<DesignEditorRef, DesignEditorProps>(
       },
 
       deleteSelected: () => {
-        const canvas = fabricCanvasRef.current
-        if (!canvas) return
-
-        const activeObject = canvas.getActiveObject()
-        if (activeObject) {
-          if (activeObject.type === 'activeSelection') {
-            // Multiple objects selected
-            const objects = (activeObject as any).getObjects()
-            objects.forEach((obj: any) => canvas.remove(obj))
-            canvas.discardActiveObject()
-          } else {
-            canvas.remove(activeObject)
-          }
-          canvas.renderAll()
+        if (selectedObjectRef.current) {
+          canvasObjectsRef.current = canvasObjectsRef.current.filter((obj) => obj.id !== selectedObjectRef.current)
+          selectedObjectRef.current = null
+          redrawCanvas()
         }
       },
 
       resetDesign: () => {
-        const canvas = fabricCanvasRef.current
-        if (!canvas) return
-
-        canvas.clear()
-        canvas.setBackgroundColor(backgroundColor, () => {})
-
-        // Add guide text back
-        const guideText = new (fabric as any).Text('Double-click to edit', {
-          left: canvasWidth / 2,
-          top: canvasHeight / 2,
-          originX: 'center',
-          originY: 'center',
-          fontSize: 16,
-          fill: '#9ca3af',
-          selectable: false,
-          evented: false,
-        })
-        canvas.add(guideText)
-        canvas.renderAll()
+        canvasObjectsRef.current = []
+        selectedObjectRef.current = null
+        const ctx = canvasContextRef.current
+        if (ctx) {
+          ctx.fillStyle = backgroundColor
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+          ctx.font = '16px Arial'
+          ctx.fillStyle = '#9ca3af'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText('Double-click to edit', canvasWidth / 2, canvasHeight / 2)
+        }
       },
 
       exportDesign: () => {
-        const canvas = fabricCanvasRef.current
-        if (!canvas) return null
-        return canvas.toJSON()
+        return {
+          objects: canvasObjectsRef.current,
+          width: canvasWidth,
+          height: canvasHeight,
+          backgroundColor,
+        }
       },
 
       getCanvasJSON: () => {
-        const canvas = fabricCanvasRef.current
-        if (!canvas) return null
-        return canvas.toJSON()
+        return {
+          objects: canvasObjectsRef.current,
+          width: canvasWidth,
+          height: canvasHeight,
+          backgroundColor,
+        }
       },
     }), [canvasWidth, canvasHeight, backgroundColor])
 
