@@ -130,42 +130,38 @@ export default function Home() {
   }
 
   return (
-    <div className="relative overflow-hidden">
-      {/* Background Visual Enhancements */}
-      <div className="glow-mesh top-0 left-0 w-[500px] h-[500px]" />
-      <div className="glow-mesh bottom-0 right-0 w-[600px] h-[600px] opacity-30" />
-      
-      <section className="app-section pt-5 sm:pt-6">
+    <div className="relative overflow-hidden bg-white">
+      <section className="app-section pt-8 sm:pt-10">
         <div className="app-container">
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
-            className="relative isolate overflow-hidden rounded-[2rem] border border-white/70 shadow-surface-md"
+            transition={{ duration: 0.5 }}
+            className="relative isolate overflow-hidden rounded-2xl border border-gray-200 shadow-lg"
           >
             <AnimatePresence mode="wait">
               <motion.img
                 key={currentSlide.image}
-                initial={{ opacity: 0, scale: 1.06 }}
+                initial={{ opacity: 0, scale: 1.05 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.03 }}
-                transition={{ duration: 0.65, ease: 'easeOut' }}
+                exit={{ opacity: 0, scale: 1.02 }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
                 src={currentSlide.image}
                 alt="Promo Banner"
                 className="absolute inset-0 h-full w-full object-cover"
               />
             </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1e1912]/85 via-[#2f2518]/55 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
             <AnimatePresence mode="wait">
-                <div className="relative flex min-h-[430px] flex-col justify-end px-6 py-8 text-white sm:min-h-[520px] sm:px-10 sm:py-10 lg:min-h-[620px] lg:px-14">
+                <div className="relative flex min-h-[420px] flex-col justify-end px-6 py-10 text-white sm:min-h-[500px] sm:px-10 lg:min-h-[580px] lg:px-16">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1, duration: 0.5 }}
                   >
-                    <Badge className="mb-5 w-fit bg-white/15 text-white backdrop-blur-md border-white/20" size="lg">
+                    <Badge className="mb-4 w-fit bg-white/20 text-white backdrop-blur-md border-white/30 font-semibold" size="lg">
                       {currentSlide.badge}
                     </Badge>
                   </motion.div>
@@ -174,7 +170,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.6 }}
-                    className="max-w-3xl text-4xl font-bold leading-[1.1] sm:text-6xl lg:text-7xl"
+                    className="max-w-3xl text-5xl font-serif font-bold leading-[1.15] sm:text-6xl lg:text-7xl"
                   >
                     {currentSlide.title}
                   </motion.h1>
@@ -183,7 +179,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3, duration: 0.5 }}
-                    className="mt-6 max-w-2xl text-base text-white/90 sm:text-lg lg:text-xl font-medium"
+                    className="mt-5 max-w-2xl text-base text-white/85 sm:text-lg font-light leading-relaxed"
                   >
                     {currentSlide.subtitle}
                   </motion.p>
@@ -192,16 +188,16 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4, duration: 0.5 }}
-                    className="mt-10 flex flex-wrap gap-4"
+                    className="mt-10 flex flex-wrap gap-3"
                   >
                     <Link to={currentSlide.primaryCta.href}>
-                      <Button size="lg" className="btn-premium h-14 px-8 text-lg font-semibold gap-2">
+                      <Button size="lg" className="btn-premium h-12 px-8 text-base font-semibold gap-2 bg-primary hover:bg-amber-700">
                         {currentSlide.primaryCta.label}
                         <ArrowRight className="h-5 w-5" />
                       </Button>
                     </Link>
                     <Link to={currentSlide.secondaryCta.href}>
-                      <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-white/30 bg-white/5 text-white hover:bg-white/15 backdrop-blur-sm">
+                      <Button size="lg" variant="outline" className="h-12 px-8 text-base font-semibold border-white/40 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm">
                         {currentSlide.secondaryCta.label}
                       </Button>
                     </Link>
@@ -211,16 +207,16 @@ export default function Home() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6, duration: 0.8 }}
-                    className="mt-12 grid w-full max-w-2xl grid-cols-3 gap-4 text-center sm:gap-6"
+                    className="mt-12 grid w-full max-w-2xl grid-cols-3 gap-3 text-center sm:gap-4"
                   >
                     {[
                       { value: '50K+', label: 'Happy Customers' },
                       { value: '1000+', label: 'Curated Products' },
-                      { value: '4.9', label: 'Customer Rating' }
+                      { value: '4.9★', label: 'Customer Rating' }
                     ].map((stat, i) => (
-                      <div key={i} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-md">
+                      <div key={i} className="rounded-xl border border-white/15 bg-white/8 px-3 py-4 backdrop-blur-md">
                         <p className="text-2xl font-bold sm:text-3xl text-primary">{stat.value}</p>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-white/60 sm:text-xs mt-1">{stat.label}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-white/60 sm:text-xs mt-1 font-medium">{stat.label}</p>
                       </div>
                     ))}
                   </motion.div>
@@ -267,45 +263,45 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-24 bg-white/30 backdrop-blur-sm relative">
+      <section className="py-20 bg-white relative">
         <div className="app-container">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 sm:gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.08 }}
                 viewport={{ once: true }}
-                className="group flex flex-col items-center text-center p-8 rounded-[2.5rem] bg-white border border-white/60 shadow-surface-sm hover:shadow-surface-md hover:border-primary/20 transition-all duration-500"
+                className="group flex flex-col items-center text-center p-6 sm:p-8 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-500"
               >
-                <div className="w-20 h-20 rounded-3xl bg-amber-50 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-100 transition-all duration-500">
-                  <feature.icon className="w-10 h-10 text-primary" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-50 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-gray-100 transition-all duration-500">
+                  <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed px-4">{feature.desc}</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2.5">{feature.title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{feature.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="app-container">
           <div className="flex items-end justify-between mb-12">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Products</h2>
-              <p className="text-gray-500">Handpicked selections from our premium collection</p>
+              <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 mb-3">Featured Products</h2>
+              <p className="text-gray-600 font-light">Handpicked selections from our premium collection</p>
             </div>
             <Link to="/products">
-              <Button variant="ghost" className="gap-2 text-primary hover:text-amber-700">
+              <Button variant="ghost" className="gap-2 text-primary hover:text-amber-700 font-semibold">
                 View All
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
             {featuredProducts.map((product, index) => (
               <motion.div
                 key={product.id}
@@ -315,8 +311,8 @@ export default function Home() {
                 viewport={{ once: true }}
               >
                 <Link to={`/products/${product.id}`}>
-                  <Card className="group relative h-full flex flex-col overflow-hidden border-none bg-white p-3 transition-all duration-500 hover:shadow-[0_22px_60px_-15px_rgba(0,0,0,0.12)] rounded-[2rem]">
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-gray-50">
+                  <Card className="group relative h-full flex flex-col overflow-hidden border border-gray-200 bg-white p-3 transition-all duration-500 hover:shadow-lg rounded-xl">
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-gray-100">
                       <img
                         src={(product.images && product.images[0]) || '/placeholder.png'}
                         alt={product.name}
@@ -325,11 +321,11 @@ export default function Home() {
                       
                       {/* Premium Badge System */}
                       {product.originalPrice && (
-                        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                          <Badge className="bg-rose-500 border-none shadow-md text-[10px] font-bold uppercase tracking-wider h-6 px-2.5">
+                        <div className="absolute top-3 left-3 flex flex-col gap-1">
+                          <Badge className="bg-rose-500 border-none shadow-sm text-[10px] font-bold uppercase tracking-wider h-5 px-2">
                             Sale
                           </Badge>
-                          <Badge className="bg-white/90 backdrop-blur-md border-none text-gray-900 shadow-sm text-[10px] font-bold h-6 px-2.5">
+                          <Badge className="bg-white border-none text-gray-900 shadow-sm text-[10px] font-bold h-5 px-2">
                             -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
                           </Badge>
                         </div>
@@ -341,14 +337,14 @@ export default function Home() {
                           variant="ghost"
                           size="icon"
                           className={cn(
-                            "h-9 w-9 rounded-full bg-white/80 border border-white/50 shadow-lg backdrop-blur-md transition-all",
+                            "h-8 w-8 rounded-lg bg-white border border-gray-300 shadow-md transition-all",
                             wishlistItems.some(w => w.id === product.id) 
                               ? "text-rose-500 bg-white" 
-                              : "text-gray-600 hover:text-rose-500 hover:bg-white"
+                              : "text-gray-600 hover:text-rose-500"
                           )}
                           onClick={(e) => handleWishlistToggle(product, e)}
                         >
-                          <Heart className={cn("h-4.5 w-4.5", wishlistItems.some(w => w.id === product.id) && "fill-current")} />
+                          <Heart className={cn("h-4 w-4", wishlistItems.some(w => w.id === product.id) && "fill-current")} />
                         </Button>
                       </div>
 
@@ -356,35 +352,35 @@ export default function Home() {
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
                     </div>
 
-                    <div className="flex flex-col flex-1 mt-5 px-1 pb-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold font-sans">
+                    <div className="flex flex-col flex-1 mt-4 px-1 pb-1">
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">
                           {product.category || 'Collection'}
                         </span>
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100/50">
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                           <span className="text-[11px] font-bold text-gray-700">{product.rating}</span>
                         </div>
                       </div>
 
-                      <h3 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-primary transition-colors line-clamp-2 min-h-[3rem]">
+                      <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-primary transition-colors line-clamp-2 min-h-[2.75rem]">
                         {product.name}
                       </h3>
 
-                      <div className="mt-auto flex items-end justify-between pt-4">
+                      <div className="mt-auto flex items-end justify-between pt-3">
                         <div className="flex flex-col">
                           {product.originalPrice && (
                             <span className="text-xs text-gray-400 line-through mb-0.5">
                               {formatPrice(product.originalPrice)}
                             </span>
                           )}
-                          <span className="text-xl font-black text-gray-900 tracking-tight">
+                          <span className="text-lg font-bold text-gray-900 tracking-tight">
                             {formatPrice(product.price)}
                           </span>
                         </div>
                         
-                        <Button size="icon" className="h-10 w-10 rounded-2xl btn-premium bg-primary shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all">
-                          <Plus className="h-5 w-5" />
+                        <Button size="icon" className="h-9 w-9 rounded-lg btn-premium bg-primary shadow-md hover:bg-amber-700 active:scale-95 transition-all">
+                          <Plus className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>

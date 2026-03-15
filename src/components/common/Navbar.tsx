@@ -82,19 +82,19 @@ export default function Navbar() {
   return (
     <>
       {/* Top Announcement Bar */}
-      <div className="bg-gradient-to-r from-primary via-primary-600 to-primary-700 text-white py-2 text-xs md:text-sm">
+      <div className="bg-gray-900 text-white py-2.5 text-xs md:text-sm font-medium">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-6">
             <div className="flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5" />
               <span>+91 (555) 123-4567</span>
             </div>
-            <span className="hidden md:inline text-white/40">|</span>
+            <span className="hidden md:inline text-white/30">|</span>
             <div className="flex items-center gap-1.5">
               <Truck className="w-3.5 h-3.5" />
-              <span className="font-semibold">SAME DAY DELIVERY</span>
+              <span>SAME DAY DELIVERY</span>
             </div>
-            <span className="hidden md:inline text-white/40">|</span>
+            <span className="hidden md:inline text-white/30">|</span>
             <span>Free Delivery on orders above ₹499</span>
           </div>
         </div>
@@ -105,8 +105,8 @@ export default function Navbar() {
         className={cn(
           'sticky top-0 left-0 right-0 z-50 transition-all duration-300 bg-white',
           isScrolled
-            ? 'border-b border-gray-200 shadow-lg shadow-gray-200/50'
-            : 'border-b border-gray-100'
+            ? 'border-b border-gray-100 shadow-sm'
+            : 'border-b border-gray-50'
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -121,54 +121,46 @@ export default function Navbar() {
             </button>
 
             {/* Logo / Brand */}
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-primary via-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
-                <span className="text-white font-bold text-lg md:text-xl">S</span>
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 md:w-11 md:h-11 rounded-lg bg-gray-900 flex items-center justify-center transition-all duration-300 group-hover:bg-primary">
+                <span className="text-white font-bold text-lg md:text-xl font-serif">S</span>
               </div>
-              <div className="hidden sm:block">
-                <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-primary-600 to-primary-700 bg-clip-text text-transparent">
+              <div className="hidden sm:flex flex-col">
+                <span className="text-lg md:text-xl font-serif font-bold text-gray-900">
                   Shopeverse
                 </span>
-                <p className="text-xs text-gray-500 -mt-0.5">Premium Gifts</p>
+                <p className="text-xs text-gray-500">Premium Collections</p>
               </div>
             </Link>
 
             {/* Search Bar - Desktop */}
-            <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-2xl mx-8">
-              <div className="relative w-full group">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/5 rounded-full blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
+            <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-xl mx-6">
+              <div className="relative w-full">
                 <div className="relative flex items-center">
-                  <Search className="w-5 h-5 absolute left-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+                  <Search className="w-4 h-4 absolute left-4 text-gray-400" />
                   <Input
                     type="search"
-                    placeholder="Search for cakes, flowers, gifts..."
+                    placeholder="Search products..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-full pl-12 pr-14 h-12 text-sm focus:bg-white focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-11 pr-4 h-10 text-sm focus:bg-white focus:border-gray-300 focus:ring-1 focus:ring-primary/30 transition-all placeholder:text-gray-400"
                   />
-                  <button
-                    type="submit"
-                    className="absolute right-2 p-2.5 bg-primary hover:bg-primary-600 text-white rounded-full transition-colors"
-                    aria-label="Search"
-                  >
-                    <Search className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
             </form>
 
             {/* Right Actions */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               {/* Wishlist */}
               <Link to="/wishlist">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative text-gray-600 hover:text-primary hover:bg-primary/10 rounded-xl w-10 h-10 md:w-11 md:h-11 transition-all"
+                  className="relative text-gray-600 hover:text-primary hover:bg-gray-100 rounded-lg w-9 h-9 md:w-10 md:h-10 transition-all"
                 >
                   <Heart className="w-5 h-5" />
                   {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-secondary text-white text-xs font-bold rounded-full px-1 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                       {wishlistCount}
                     </span>
                   )}
@@ -180,11 +172,11 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative text-gray-600 hover:text-primary hover:bg-primary/10 rounded-xl w-10 h-10 md:w-11 md:h-11 transition-all"
+                  className="relative text-gray-600 hover:text-primary hover:bg-gray-100 rounded-lg w-9 h-9 md:w-10 md:h-10 transition-all"
                 >
                   <ShoppingCart className="w-5 h-5" />
                   {cartItemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-5 h-5 bg-gradient-to-r from-primary to-primary-600 text-white text-xs font-bold rounded-full px-1 flex items-center justify-center shadow-md">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                       {cartItemCount}
                     </span>
                   )}
@@ -197,11 +189,11 @@ export default function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="hidden md:flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-primary/10 transition-all"
+                      className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-all"
                     >
-                      <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+                      <Avatar className="h-8 w-8 ring-2 ring-gray-200">
                         <AvatarImage src={user?.avatar_url || user?.avatar} alt={userDisplayName} />
-                        <AvatarFallback className="bg-gradient-to-br from-primary-100 to-primary-200 text-primary font-semibold text-sm">
+                        <AvatarFallback className="bg-gray-200 text-gray-900 font-semibold text-sm">
                           {userInitial}
                         </AvatarFallback>
                       </Avatar>
@@ -212,12 +204,12 @@ export default function Navbar() {
                       <ChevronDown className={cn("w-4 h-4 text-gray-400 transition-transform", profileOpen && "rotate-180")} />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl shadow-primary/10 border-primary/10">
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-br from-primary/5 to-transparent">
+                  <DropdownMenuContent align="end" className="w-64 rounded-lg shadow-lg border-gray-200">
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                        <Avatar className="h-10 w-10 ring-2 ring-gray-200">
                           <AvatarImage src={user?.avatar_url || user?.avatar} alt={userDisplayName} />
-                          <AvatarFallback className="bg-gradient-to-br from-primary-100 to-primary-200 text-primary font-semibold">
+                          <AvatarFallback className="bg-gray-200 text-gray-900 font-semibold">
                             {userInitial}
                           </AvatarFallback>
                         </Avatar>
@@ -228,21 +220,21 @@ export default function Navbar() {
                       </div>
                     </div>
                     <div className="py-2">
-                      <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer py-2.5">
-                        <User className="w-4 h-4 mr-3 text-primary" />
+                      <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer py-2 px-4">
+                        <User className="w-4 h-4 mr-3 text-gray-600" />
                         <span className="text-sm">My Profile</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/orders')} className="cursor-pointer py-2.5">
-                        <Package className="w-4 h-4 mr-3 text-primary" />
+                      <DropdownMenuItem onClick={() => navigate('/orders')} className="cursor-pointer py-2 px-4">
+                        <Package className="w-4 h-4 mr-3 text-gray-600" />
                         <span className="text-sm">My Orders</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/wishlist')} className="cursor-pointer py-2.5">
-                        <Heart className="w-4 h-4 mr-3 text-primary" />
+                      <DropdownMenuItem onClick={() => navigate('/wishlist')} className="cursor-pointer py-2 px-4">
+                        <Heart className="w-4 h-4 mr-3 text-gray-600" />
                         <span className="text-sm">Wishlist</span>
                       </DropdownMenuItem>
                       {isAdmin && (
-                        <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer py-2.5">
-                          <LayoutDashboard className="w-4 h-4 mr-3 text-primary" />
+                        <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer py-2 px-4">
+                          <LayoutDashboard className="w-4 h-4 mr-3 text-gray-600" />
                           <span className="text-sm">Admin Panel</span>
                         </DropdownMenuItem>
                       )}
@@ -250,10 +242,10 @@ export default function Navbar() {
                     <DropdownMenuSeparator className="bg-gray-100" />
                     <DropdownMenuItem
                       onClick={handleLogout}
-                      className="cursor-pointer py-2.5 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      className="cursor-pointer py-2 px-4 text-red-600 hover:bg-red-50"
                     >
                       <LogOut className="w-4 h-4 mr-3" />
-                      <span className="text-sm font-medium">Logout</span>
+                      <span className="text-sm">Logout</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -262,13 +254,13 @@ export default function Navbar() {
                   <Button
                     variant="ghost"
                     onClick={() => navigate('/login')}
-                    className="text-gray-700 font-medium hover:bg-primary/10 hover:text-primary rounded-xl"
+                    className="text-gray-700 font-medium hover:bg-gray-100 rounded-lg"
                   >
                     Login
                   </Button>
                   <Button
                     onClick={() => navigate('/register')}
-                    className="bg-gradient-to-r from-primary to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-medium rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+                    className="bg-primary hover:bg-amber-700 text-white font-medium rounded-lg transition-all"
                   >
                     Sign Up
                   </Button>
@@ -280,13 +272,13 @@ export default function Navbar() {
           {/* Mobile Search - Below navbar */}
           <form onSubmit={handleSearch} className="lg:hidden pb-4">
             <div className="relative">
-              <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <Input
                 type="search"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-full pl-12 pr-4 h-11 text-sm"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-11 pr-4 h-10 text-sm"
               />
             </div>
           </form>
@@ -295,14 +287,14 @@ export default function Navbar() {
         {/* Category Navigation - Desktop */}
         <div className="hidden lg:block border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-6 py-3 overflow-x-auto">
+            <div className="flex items-center gap-8 py-3 overflow-x-auto">
               {categories.map((category) => (
                 <Link
                   key={category.slug}
                   to={`/products?category=${category.slug}`}
                   className="text-sm font-medium text-gray-700 hover:text-primary whitespace-nowrap transition-colors"
                 >
-                  {category.name.toUpperCase()}
+                  {category.name}
                 </Link>
               ))}
             </div>
@@ -329,20 +321,20 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-80 bg-white z-50 lg:hidden shadow-2xl"
+              className="fixed inset-y-0 left-0 w-80 bg-white z-50 lg:hidden shadow-lg"
             >
               <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-primary/10 to-primary-50/50">
+                <div className="flex items-center justify-between p-4 border-b border-gray-100">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary via-primary-500 to-primary-700 flex items-center justify-center">
-                      <span className="text-white font-bold text-base">S</span>
+                    <div className="w-9 h-9 rounded-lg bg-gray-900 flex items-center justify-center">
+                      <span className="text-white font-bold text-base font-serif">S</span>
                     </div>
-                    <span className="text-lg font-bold text-gray-900">Shopeverse</span>
+                    <span className="text-lg font-serif font-bold text-gray-900">Shopeverse</span>
                   </div>
                   <button
                     onClick={() => setMobileMenuOpen(false)}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -350,11 +342,11 @@ export default function Navbar() {
 
                 {/* User Info */}
                 {isAuthenticated ? (
-                  <div className="p-4 bg-gradient-to-br from-primary-50 to-white border-b border-gray-100">
+                  <div className="p-4 bg-gray-50 border-b border-gray-100">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12 ring-2 ring-primary/20">
+                      <Avatar className="h-12 w-12 ring-2 ring-gray-200">
                         <AvatarImage src={user?.avatar_url || user?.avatar} />
-                        <AvatarFallback className="bg-gradient-to-br from-primary-100 to-primary-200 text-primary font-semibold">
+                        <AvatarFallback className="bg-gray-200 text-gray-900 font-semibold">
                           {userInitial}
                         </AvatarFallback>
                       </Avatar>
@@ -367,14 +359,14 @@ export default function Navbar() {
                 ) : (
                   <div className="p-4 space-y-2 border-b border-gray-100">
                     <Button
-                      className="w-full bg-gradient-to-r from-primary to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-xl"
+                      className="w-full bg-primary hover:bg-amber-700 text-white rounded-lg"
                       onClick={() => { navigate('/login'); setMobileMenuOpen(false) }}
                     >
                       Login
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full rounded-xl border-primary/20 text-primary hover:bg-primary/10"
+                      className="w-full rounded-lg border-gray-300 text-gray-900 hover:bg-gray-100"
                       onClick={() => { navigate('/register'); setMobileMenuOpen(false) }}
                     >
                       Sign Up
@@ -395,9 +387,9 @@ export default function Navbar() {
                           key={category.slug}
                           to={`/products?category=${category.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-primary transition-colors"
                         >
-                          <span className="font-medium">{category.name}</span>
+                          <span className="font-medium text-sm">{category.name}</span>
                         </Link>
                       ))}
                     </div>
@@ -409,10 +401,10 @@ export default function Navbar() {
                   <div className="p-4 border-t border-gray-100">
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-red-600 hover:bg-red-50 w-full transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 w-full transition-colors"
                     >
                       <LogOut className="w-5 h-5" />
-                      <span className="font-medium">Logout</span>
+                      <span className="font-medium text-sm">Logout</span>
                     </button>
                   </div>
                 )}
