@@ -19,7 +19,13 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['fabric'],
-    force: true,
+    include: ['react', 'react-dom', 'react-router-dom'],
   },
-  cacheDir: 'node_modules/.vite',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
 })
