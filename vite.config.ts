@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    allowedHosts: ['sb-394hesp4snd1.vercel.run'],
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
