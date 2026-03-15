@@ -231,7 +231,11 @@
   }
 
   .card-premium:hover {
-    @apply border-amber-200/80 shadow-surface-md;
+    @apply border-primary/40 shadow-surface-md -translate-y-1.5;
+  }
+
+  .card-price-tag {
+    @apply absolute bottom-3 right-3 rounded-full bg-white/90 px-3 py-1 font-bold text-gray-900 shadow-sm backdrop-blur-md;
   }
 
   .category-marquee {
@@ -246,6 +250,24 @@
 
   .category-marquee:hover .category-marquee-track {
     animation-play-state: paused;
+  }
+
+  .glow-mesh {
+    @apply absolute -z-10 blur-[120px] opacity-40;
+    background: radial-gradient(circle at center, hsl(var(--primary) / 0.35) 0%, transparent 70%);
+  }
+
+  .text-premium-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--primary)) 100%);
+  }
+
+  .parallax-wrap {
+    @apply relative overflow-hidden;
+  }
+
+  .parallax-element {
+    transition: transform 0.1s cubic-bezier(0.33, 1, 0.68, 1);
   }
 
   .divider-text {

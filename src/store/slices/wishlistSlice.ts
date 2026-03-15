@@ -17,8 +17,31 @@ const initialState: WishlistState = {
 
 export const fetchWishlist = createAsyncThunk<Product[]>('wishlist/fetchWishlist', async (_, { dispatch, rejectWithValue }) => {
   try {
-    const response = await api.get<{ status: string; message: string; data: { items: Product[] } }>('/wishlist')
-    return response.data.data.items
+    const response = await api.get<{
+      success: boolean
+      data: { items: any[]; total: number } | any[]
+    }>('/wishlist')
+    const raw = response.data?.data
+    const rawItems = Array.isArray(raw) ? raw : (raw as any)?.items || []
+    // Backend wishlist items have a nested `product` object
+    return rawItems.map((item: any) => {
+      const p = item.product || item
+      return {
+        id: String(p.id),
+        name: p.name || '',
+        description: p.description || '',
+        price: p.sale_price ?? p.base_price ?? 0,
+        originalPrice: p.sale_price ? p.base_price : undefined,
+        images: p.images?.map((img: any) => img.url) || [],
+        image_url: p.images?.find((img: any) => img.is_primary)?.url,
+        category: p.category?.name || '',
+        brand: p.brand,
+        rating: p.rating_avg ?? 0,
+        reviewCount: p.review_count ?? 0,
+        stock: p.stock ?? 0,
+        created_at: p.created_at || new Date().toISOString(),
+      }
+    })
   } catch (error: any) {
     const message = handleApiError(error, dispatch, 'Failed to fetch wishlist')
     return rejectWithValue(message)

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
@@ -8,45 +8,85 @@ import {
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-import { mockSalesData, mockRecentOrders } from '../data/mockData'
 import { formatPrice } from '../lib/utils'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
-import { mockAdminProducts, mockAdminOrders, mockAdminCustomers } from '../data/mockData'
+import api from '../services/api'
+import { Order } from '../types'
+
+interface DashboardStatsData {
+  total_revenue: number
+  total_orders: number
+  total_users: number
+  low_stock_products: number
+}
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
 
+  const [stats, setStats] = useState<DashboardStatsData>({
+    total_revenue: 0,
+    total_orders: 0,
+    total_users: 0,
+    low_stock_products: 0,
+  })
+  const [recentOrders, setRecentOrders] = useState<Order[]>([])
+  const [salesData, setSalesData] = useState<any[]>([])
+
+  const [recentOrdersPage, setRecentOrdersPage] = useState(1)
+  const ordersPerPage = 6
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const statsRes = await api.get('/admin/dashboard')
+        if (statsRes.data) {
+          setStats(statsRes.data)
+        }
+
+        const ordersRes = await api.get('/admin/orders', { params: { page: 1, page_size: 50 }})
+        setRecentOrders(ordersRes.data.items || [])
+
+        // Fallback for sales chart until fully realized on backend
+        setSalesData([
+          { date: '1', revenue: 0, orders: 0 },
+          { date: '2', revenue: 0, orders: 0 }
+        ])
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    fetchData()
+  }, [])
+
   const statsData = [
-    { 
-      title: 'Total Revenue', 
-      value: formatPrice(mockAdminOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0)),
-      change: 12,
+    {
+      title: 'Total Revenue',
+      value: formatPrice(stats.total_revenue || 0),
+      change: 0,
       icon: DollarSign,
     },
-    { 
-      title: 'Total Orders', 
-      value: mockAdminOrders.length.toLocaleString(),
-      change: 8,
+    {
+      title: 'Total Orders',
+      value: (stats.total_orders || 0).toLocaleString(),
+      change: 0,
       icon: ShoppingCart,
     },
-    { 
-      title: 'Total Customers', 
-      value: mockAdminCustomers.length.toLocaleString(),
-      change: 15,
+    {
+      title: 'Total Customers',
+      value: (stats.total_users || 0).toLocaleString(),
+      change: 0,
       icon: Users,
     },
-    { 
-      title: 'Total Products', 
-      value: mockAdminProducts.length.toLocaleString(),
-      change: 5,
+    {
+      title: 'Low Stock Products',
+      value: (stats.low_stock_products || 0).toLocaleString(),
+      change: 0,
       icon: Package,
     },
   ]
 
-  const [recentOrdersPage, setRecentOrdersPage] = useState(1)
-  const ordersPerPage = 6
-  const totalOrderPages = Math.ceil(mockRecentOrders.length / ordersPerPage)
-  const paginatedRecentOrders = mockRecentOrders.slice(
+  const totalOrderPages = Math.ceil(recentOrders.length / ordersPerPage)
+  const paginatedRecentOrders = recentOrders.slice(
     (recentOrdersPage - 1) * ordersPerPage,
     recentOrdersPage * ordersPerPage
   )
@@ -101,7 +141,7 @@ export default function AdminDashboard() {
           <CardContent className={cardContentClass}>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={mockSalesData}>
+                <AreaChart data={salesData}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
@@ -111,19 +151,19 @@ export default function AdminDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px'
-                    }} 
+                    }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="hsl(var(--primary))" 
-                    fillOpacity={1} 
-                    fill="url(#colorRevenue)" 
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="hsl(var(--primary))"
+                    fillOpacity={1}
+                    fill="url(#colorRevenue)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -138,16 +178,16 @@ export default function AdminDashboard() {
           <CardContent className={cardContentClass}>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={mockSalesData}>
+                <BarChart data={salesData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px'
-                    }} 
+                    }}
                   />
                   <Bar dataKey="orders" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -171,8 +211,9 @@ export default function AdminDashboard() {
                 <tr className="border-b">
                   <th className="text-left py-3 px-4 font-medium">Order</th>
                   <th className="text-left py-3 px-4 font-medium">Customer</th>
-                  <th className="text-left py-3 px-4 font-medium">Product</th>
+                  <th className="text-left py-3 px-4 font-medium">Items</th>
                   <th className="text-left py-3 px-4 font-medium">Amount</th>
+                  <th className="text-left py-3 px-4 font-medium">Payment</th>
                   <th className="text-left py-3 px-4 font-medium">Status</th>
                   <th className="text-left py-3 px-4 font-medium">Date</th>
                   <th className="text-left py-3 px-4 font-medium"></th>
@@ -186,12 +227,17 @@ export default function AdminDashboard() {
                     </td>
                     <td className="py-3 px-4">
                       <div>
-                        <p className="font-medium">{order.customer}</p>
-                        <p className="text-sm text-muted-foreground">{order.email}</p>
+                        <p className="font-medium">{order.user_id}</p>
+                        <p className="text-sm text-muted-foreground">Order: {order.orderNumber || order.id}</p>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-sm">{order.product}</td>
-                    <td className="py-3 px-4 font-medium">{formatPrice(order.amount)}</td>
+                    <td className="py-3 px-4 text-sm">{order.items?.length || 0} items</td>
+                    <td className="py-3 px-4 font-medium">{formatPrice(order.total_amount || order.total || 0)}</td>
+                    <td className="py-3 px-4">
+                      <Badge variant={(order.payment_status === 'paid' || order.payment_status === 'completed') ? 'success' : 'warning'}>
+                        {order.payment_status || 'pending'}
+                      </Badge>
+                    </td>
                     <td className="py-3 px-4">
                       <Badge 
                         variant={
@@ -203,7 +249,9 @@ export default function AdminDashboard() {
                         {order.status}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4 text-sm text-muted-foreground">{order.date}</td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground">
+                      {order.created_at ? new Date(order.created_at).toLocaleDateString() : '-'}
+                    </td>
                     <td className="py-3 px-4">
                       <Button variant="ghost" size="icon">
                         <Eye className="w-4 h-4" />
@@ -218,7 +266,7 @@ export default function AdminDashboard() {
           {totalOrderPages > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t">
               <p className="text-sm text-muted-foreground">
-                Showing {(recentOrdersPage - 1) * ordersPerPage + 1} to {Math.min(recentOrdersPage * ordersPerPage, mockRecentOrders.length)} of {mockRecentOrders.length} orders
+                Showing {(recentOrdersPage - 1) * ordersPerPage + 1} to {Math.min(recentOrdersPage * ordersPerPage, recentOrders.length)} of {recentOrders.length} orders
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -255,4 +303,3 @@ export default function AdminDashboard() {
     </div>
   )
 }
-

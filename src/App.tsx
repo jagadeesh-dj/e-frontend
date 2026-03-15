@@ -15,6 +15,7 @@ import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
+import PaymentCheckout from './pages/PaymentCheckout'
 import Orders from './pages/Orders'
 import OrderDetail from './pages/OrderDetail'
 import Profile from './pages/Profile'
@@ -28,6 +29,7 @@ import AdminCRM from './pages/admin/AdminCRM'
 import AdminLayout from './pages/admin/AdminLayout'
 import CustomizeProduct from './pages/CustomizeProduct'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import ScrollToTop from './components/ScrollToTop'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAppSelector((state) => state.auth)
@@ -37,6 +39,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth)
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin' || user?.is_admin === true
+  if (isAuthenticated && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Loading...
+      </div>
+    )
+  }
   return isAuthenticated && isAdmin ? <>{children}</> : <Navigate to="/" />
 }
 
@@ -53,6 +62,7 @@ function AppContent() {
 
   return (
     <>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
@@ -69,6 +79,11 @@ function AppContent() {
           <Route path="checkout" element={
             <ProtectedRoute>
               <Checkout />
+            </ProtectedRoute>
+          } />
+          <Route path="payment/:orderId" element={
+            <ProtectedRoute>
+              <PaymentCheckout />
             </ProtectedRoute>
           } />
           <Route path="orders" element={

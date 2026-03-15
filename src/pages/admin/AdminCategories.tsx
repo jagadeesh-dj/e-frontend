@@ -32,7 +32,7 @@ import api from '../../services/api'
 import { ApiResponse } from '../../types'
 import { handleApiError } from '../../utils/apiErrorHandler'
 import { fileToBase64 } from '../../utils/fileToBase64'
-import { downloadCsv, getCsvField, parseCsv } from '../../utils/csv'
+import { downloadCsv } from '../../utils/csv'
 
 interface PaginationMeta {
   page: number
@@ -387,64 +387,41 @@ export default function AdminCategories() {
 
     setIsBulkUploading(true)
     try {
-      const text = await file.text()
-      const rowsToImport = parseCsv(text)
+      const formData = new FormData()
+      formData.append('file', file)
 
-      if (rowsToImport.length === 0) {
+      const response = await api.post<ApiResponse<{ count?: number }>>(
+        '/categories/category-bulk-upload',
+        formData
+      )
+
+      if (!response.data.success) {
         dispatch(
           addToast({
             type: 'error',
-            title: 'Invalid CSV',
-            message: 'No valid rows found in the uploaded file.',
+            title: 'Bulk upload failed',
+            message: response.data.message || 'Failed to import categories.',
           })
         )
         return
       }
 
-      let createdCount = 0
-      let failedCount = 0
-
-      for (const row of rowsToImport) {
-        const name = getCsvField(row, 'name').trim()
-        if (!name) {
-          failedCount += 1
-          continue
-        }
-
-        const parentValue = getCsvField(row, 'parent_id').trim()
-        const parsedParentId = Number(parentValue)
-        const sortOrderValue = Number(getCsvField(row, 'sort_order').trim() || '0')
-
-        const payload = {
-          name,
-          slug: getCsvField(row, 'slug').trim() || generateSlug(name),
-          description: getCsvField(row, 'description').trim() || null,
-          sort_order: Number.isNaN(sortOrderValue) ? 0 : sortOrderValue,
-          image_url: getCsvField(row, 'image_url').trim() || null,
-          parent_id:
-            parentValue && parentValue.toLowerCase() !== 'none' && !Number.isNaN(parsedParentId)
-              ? parsedParentId
-              : null,
-        }
-
-        try {
-          await api.post<ApiResponse<CategoryTreeNode>>('/categories/', payload)
-          createdCount += 1
-        } catch {
-          failedCount += 1
-        }
-      }
-
       await loadCategories(currentPage, searchQuery)
+
+      const insertedCount = response.data.data?.count
       dispatch(
         addToast({
-          type: failedCount > 0 ? 'warning' : 'success',
+          type: 'success',
           title: 'Category bulk upload complete',
-          message: `Created ${createdCount} categories${failedCount > 0 ? `, failed ${failedCount}` : ''}.`,
+          message:
+            response.data.message ||
+            (typeof insertedCount === 'number'
+              ? `Imported ${insertedCount} categories successfully.`
+              : 'Categories imported successfully.'),
         })
       )
     } catch (error) {
-      handleApiError(error, dispatch, 'Failed to process bulk upload file')
+      handleApiError(error, dispatch, 'Failed to upload categories file')
     } finally {
       setIsBulkUploading(false)
       if (bulkUploadInputRef.current) {
@@ -521,7 +498,7 @@ export default function AdminCategories() {
           <input
             ref={bulkUploadInputRef}
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             className="hidden"
             onChange={(e) => void handleBulkUpload(e.target.files?.[0])}
           />

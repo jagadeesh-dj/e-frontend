@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import {
   User, Package, MapPin, Mail,
   Phone, Loader2, Camera, Save, Calendar, Edit3, Plus, Trash2,
-  Lock, Settings, Shield, Bell, BellOff, Eye, EyeOff, AlertTriangle, ChevronRight
+  Lock, Settings, Shield, Bell, BellOff, Eye, EyeOff, AlertTriangle, ChevronRight, ArrowRight
 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
@@ -281,6 +281,9 @@ export default function Profile() {
   return (
     <div className="min-h-screen">
       <div className="app-container py-8">
+        <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors">
+          <ArrowRight className="w-4 h-4 mr-2 rotate-180" />Back to Home
+        </Link>
         {/* Mobile horizontal tabs */}
         <div className="lg:hidden mb-6 -mx-4 px-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">

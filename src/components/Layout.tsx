@@ -252,23 +252,25 @@ export default function Layout() {
           </div>
         </header>
 
-        <div className="hidden border-b border-amber-100/70 bg-white/90 md:block">
-          <div className="app-container">
-            <div className="category-marquee py-3">
-              <div className="category-marquee-track">
-                {marqueeCategories.map((category, index) => (
-                  <Link
-                    key={`${category.label}-${index}`}
-                    to={category.href}
-                    className="mx-2 whitespace-nowrap rounded-full bg-amber-100/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-amber-800 transition-colors hover:bg-amber-200/70"
-                  >
-                    {category.label}
-                  </Link>
-                ))}
+        {location.pathname === '/' && (
+          <div className="hidden border-b border-amber-100/70 bg-white/90 md:block">
+            <div className="app-container">
+              <div className="category-marquee py-3">
+                <div className="category-marquee-track">
+                  {marqueeCategories.map((category, index) => (
+                    <Link
+                      key={`${category.label}-${index}`}
+                      to={category.href}
+                      className="mx-2 whitespace-nowrap rounded-full bg-amber-100/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-amber-800 transition-colors hover:bg-amber-200/70"
+                    >
+                      {category.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <AnimatePresence>
@@ -387,7 +389,12 @@ export default function Layout() {
         )}
       </AnimatePresence>
 
-      <main className="min-h-screen pb-10 pt-[7.6rem] md:pt-[10.4rem] lg:pt-[7.2rem]">
+      <main className={cn(
+        "min-h-screen pb-10 transition-all duration-300",
+        location.pathname === '/' 
+          ? "pt-[7.6rem] md:pt-[10.4rem] lg:pt-[7.2rem]" 
+          : "pt-[4.5rem] sm:pt-[5rem] md:pt-[5.5rem]"
+      )}>
         <Outlet />
       </main>
 

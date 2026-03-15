@@ -83,6 +83,9 @@ export default function Orders() {
     <div className="min-h-screen pb-20">
       <div className="bg-gradient-to-r from-amber-50 to-white py-12">
         <div className="app-container">
+          <Link to="/profile" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4 transition-colors">
+            <ArrowRight className="w-4 h-4 mr-2 rotate-180" />Back to Profile
+          </Link>
           <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
           <p className="text-gray-500 mt-2">Track and manage your orders</p>
         </div>
@@ -153,7 +156,7 @@ export default function Orders() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Link to={`/orders/${order.id}`}>
+                <Link to={`/orders/${order.order_number || order.id}`}>
                   <Card hover className="card-premium p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-start gap-4">
@@ -162,9 +165,12 @@ export default function Orders() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <p className="font-mono font-medium text-gray-900">#{order.orderNumber || order.id}</p>
+                            <p className="font-mono font-medium text-gray-900">#{order.order_number || order.orderNumber || order.id}</p>
                             <Badge variant={getStatusColor(order.status) as any}>
                               {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            </Badge>
+                            <Badge variant={(order.payment_status === 'paid' || order.payment_status === 'completed') ? 'success' : 'warning'}>
+                              {(order.payment_status || 'pending').charAt(0).toUpperCase() + (order.payment_status || 'pending').slice(1)}
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-500">

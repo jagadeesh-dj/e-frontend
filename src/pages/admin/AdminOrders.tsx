@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Search, Eye, Truck, CheckCircle, XCircle, Clock, Package as PackageIcon, ChevronLeft, ChevronRight, FileSpreadsheet
 } from 'lucide-react'
@@ -9,11 +9,12 @@ import { Badge } from '../../components/ui/badge'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '../../components/ui/select'
-import { mockAdminOrders } from '../../data/mockData'
 import { formatPrice } from '../../lib/utils'
 import { downloadCsv } from '../../utils/csv'
 import { useAppDispatch } from '../../store/hooks'
 import { addToast } from '../../store/slices/uiSlice'
+import api from '../../services/api'
+import { Order } from '../../types'
 
 const statusColors: Record<string, "success" | "warning" | "outline" | "default" | "destructive" | "secondary"> = {
   pending: 'warning',
@@ -33,17 +34,32 @@ const statusIcons: Record<string, React.ReactNode> = {
 
 export default function AdminOrders() {
   const dispatch = useAppDispatch()
-  const [orders] = useState(mockAdminOrders)
+  const [orders, setOrders] = useState<Order[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await api.get('/admin/orders', {
+          params: { page: 1, page_size: 1000 }
+        })
+        setOrders(response.data.items || [])
+      } catch (error) {
+        console.error('Failed to load orders', error)
+        dispatch(addToast({ type: 'error', title: 'Error', message: 'Failed to load orders' }))
+      }
+    }
+    fetchOrders()
+  }, [dispatch])
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch =
-      order.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(order.id)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.user_id?.toLowerCase().includes(searchQuery.toLowerCase())
+      String(order.user_id)?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -169,7 +185,7 @@ export default function AdminOrders() {
                   paginatedOrders.map((order) => (
                     <tr key={order.id} className="border-b hover:bg-muted/50">
                       <td className="py-3 px-4">
-                        <span className="font-mono text-sm">#{order.orderNumber || order.id?.substring(0, 8)}</span>
+                        <span className="font-mono text-sm">#{order.orderNumber || String(order.id).substring(0, 8)}</span>
                       </td>
                       <td className="py-3 px-4">
                         <span className="font-mono text-sm">{order.user_id}</span>
@@ -181,7 +197,7 @@ export default function AdminOrders() {
                         {formatPrice(order.total_amount || order.total || 0)}
                       </td>
                       <td className="py-3 px-4">
-                        <Badge variant={order.payment_status === 'paid' ? 'success' : 'warning'}>
+                        <Badge variant={(order.payment_status === 'paid' || order.payment_status === 'completed') ? 'success' : 'warning'}>
                           {order.payment_status || 'pending'}
                         </Badge>
                       </td>

@@ -37,7 +37,7 @@ class ApiClient {
           const refreshToken = localStorage.getItem('refresh_token');
           if (refreshToken) {
             try {
-              const response = await this.client.post('/users/refresh', {
+              const response = await this.client.post('/auth/refresh', {
                 refresh_token: refreshToken,
               });
               const { access_token, refresh_token: newRefreshToken } = response.data.data;
@@ -315,4 +315,77 @@ export const inventoryApi = {
   }) => api.post('/inventory/adjust', data),
 
   getLowStock: () => api.get('/inventory/low-stock'),
+};
+
+// Customizations API - User routes
+export const customizationsApi = {
+  getProductTemplate: (productId: string) => 
+    api.get(`/customizations/products/${productId}/template`),
+
+  saveCustomization: (data: {
+    template_id: string;
+    product_id: string;
+    session_id?: string;
+    field_values: Record<string, any>;
+    design_data: Record<string, any>;
+    preview_image_url?: string;
+  }) => api.post('/customizations/', data),
+
+  getCustomization: (customizationId: string) => 
+    api.get(`/customizations/${customizationId}`),
+
+  uploadAsset: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/customizations/upload-asset', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+
+  addCustomizedProductToCart: (data: {
+    customization_id: string;
+    quantity: number;
+    session_id?: string;
+  }) => api.post('/customizations/cart/add-customized-product', data),
+};
+
+// Customizations API - Admin routes
+export const customizationsAdminApi = {
+  // Templates
+  createTemplate: (productId: string, data: { name: string; description?: string; base_price_adjustment: number; is_active: boolean }) =>
+    api.post(`/admin/customizations/products/${productId}/template`, data),
+  getTemplate: (templateId: string) =>
+    api.get(`/admin/customizations/templates/${templateId}`),
+  updateTemplate: (templateId: string, data: any) =>
+    api.put(`/admin/customizations/templates/${templateId}`, data),
+  deleteTemplate: (templateId: string) =>
+    api.delete(`/admin/customizations/templates/${templateId}`),
+
+  // Fields
+  addField: (templateId: string, data: any) =>
+    api.post(`/admin/customizations/templates/${templateId}/fields`, data),
+  updateField: (fieldId: string, data: any) =>
+    api.put(`/admin/customizations/fields/${fieldId}`, data),
+  deleteField: (fieldId: string) =>
+    api.delete(`/admin/customizations/fields/${fieldId}`),
+
+  // Options
+  addOption: (fieldId: string, data: any) =>
+    api.post(`/admin/customizations/fields/${fieldId}/options`, data),
+  deleteOption: (optionId: string) =>
+    api.delete(`/admin/customizations/options/${optionId}`),
+
+  // Print Areas
+  addPrintArea: (templateId: string, data: any) =>
+    api.post(`/admin/customizations/templates/${templateId}/print-areas`, data),
+  deletePrintArea: (areaId: string) =>
+    api.delete(`/admin/customizations/print-areas/${areaId}`),
+
+  // Layers
+  addLayer: (areaId: string, data: any) =>
+    api.post(`/admin/customizations/print-areas/${areaId}/layers`, data),
+  deleteLayer: (layerId: string) =>
+    api.delete(`/admin/customizations/layers/${layerId}`),
 };

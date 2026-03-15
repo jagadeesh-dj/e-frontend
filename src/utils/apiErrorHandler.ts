@@ -61,7 +61,7 @@ const getErrorTitle = (status: number, errorCode?: string): string => {
   }
 };
 
-export const handleApiError = (error: any, dispatch?: AppDispatch, defaultMessage?: string): string => {
+export const handleApiError = (error: any, dispatch?: any, defaultMessage?: string): string => {
   const status = error.response?.status;
   const data = error.response?.data as ApiErrorResponse | undefined;
   const errorCode = data?.error_code;
@@ -79,7 +79,7 @@ export const handleApiError = (error: any, dispatch?: AppDispatch, defaultMessag
   return message;
 };
 
-export const handleApiSuccess = (dispatch: AppDispatch, title: string, message: string) => {
+export const handleApiSuccess = (dispatch: any, title: string, message: string) => {
   dispatch(addToast({ 
     type: 'success', 
     title, 
@@ -87,7 +87,7 @@ export const handleApiSuccess = (dispatch: AppDispatch, title: string, message: 
   }));
 };
 
-export const handleApiWarning = (dispatch: AppDispatch, title: string, message: string) => {
+export const handleApiWarning = (dispatch: any, title: string, message: string) => {
   dispatch(addToast({ 
     type: 'warning', 
     title, 
@@ -95,7 +95,7 @@ export const handleApiWarning = (dispatch: AppDispatch, title: string, message: 
   }));
 };
 
-export const handleApiInfo = (dispatch: AppDispatch, title: string, message: string) => {
+export const handleApiInfo = (dispatch: any, title: string, message: string) => {
   dispatch(addToast({ 
     type: 'info', 
     title, 

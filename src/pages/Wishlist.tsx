@@ -51,6 +51,9 @@ export default function Wishlist() {
     <div className="min-h-screen pb-20">
       <div className="bg-gradient-to-r from-amber-50 to-white py-12">
         <div className="app-container">
+          <Link to="/products" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4 transition-colors">
+            <ArrowRight className="w-4 h-4 mr-2 rotate-180" />Back to Products
+          </Link>
           <h1 className="text-3xl font-bold text-gray-900">My Wishlist</h1>
           <p className="text-gray-500 mt-2">{items.length} saved items</p>
         </div>

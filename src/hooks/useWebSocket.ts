@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react'
 
 interface InventoryUpdate {
   type: 'inventory_update' | 'low_stock_alert'
@@ -30,47 +30,72 @@ export function useWebSocket({
   const [isConnected, setIsConnected] = useState(false)
   const [lastMessage, setLastMessage] = useState<InventoryUpdate | null>(null)
 
+  // Use refs for callbacks to avoid re-triggering connect/disconnect on every render
+  const onMessageRef = useRef(onMessage)
+  const onConnectRef = useRef(onConnect)
+  const onDisconnectRef = useRef(onDisconnect)
+
+  // Keep refs updated with the latest versions
+  useEffect(() => {
+    onMessageRef.current = onMessage
+    onConnectRef.current = onConnect
+    onDisconnectRef.current = onDisconnect
+  })
+
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return
-
-    const ws = new WebSocket(url)
-    wsRef.current = ws
-
-    ws.onopen = () => {
-      setIsConnected(true)
-      reconnectCountRef.current = 0
-      onConnect?.()
+    if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
+      return
     }
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data) as InventoryUpdate
-        setLastMessage(data)
-        onMessage?.(data)
-      } catch (error) {
-        console.error('Failed to parse WebSocket message:', error)
+    try {
+      const ws = new WebSocket(url)
+      wsRef.current = ws
+
+      ws.onopen = () => {
+        setIsConnected(true)
+        reconnectCountRef.current = 0
+        onConnectRef.current?.()
       }
-    }
 
-    ws.onclose = () => {
-      setIsConnected(false)
-      onDisconnect?.()
-
-      if (reconnectCountRef.current < reconnectAttempts) {
-        reconnectCountRef.current += 1
-        setTimeout(connect, reconnectInterval)
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as InventoryUpdate
+          setLastMessage(data)
+          onMessageRef.current?.(data)
+        } catch (error) {
+          console.error('Failed to parse WebSocket message:', error)
+        }
       }
-    }
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error)
+      ws.onclose = () => {
+        setIsConnected(false)
+        onDisconnectRef.current?.()
+
+        // Check if we should reconnect - but only if not deliberately closed
+        if (wsRef.current === ws && reconnectCountRef.current < reconnectAttempts) {
+          reconnectCountRef.current += 1
+          setTimeout(() => {
+            if (wsRef.current === ws) {
+              connect()
+            }
+          }, reconnectInterval)
+        }
+      }
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error)
+      }
+    } catch (error) {
+      console.error('Failed to create WebSocket connection:', error)
     }
-  }, [url, onMessage, onConnect, onDisconnect, reconnectAttempts, reconnectInterval])
+  }, [url, reconnectAttempts, reconnectInterval])
 
   const disconnect = useCallback(() => {
     if (wsRef.current) {
-      wsRef.current.close()
+      // Clear the ref first to prevent the onclose handler from trigger a reconnect
+      const ws = wsRef.current
       wsRef.current = null
+      ws.close()
     }
   }, [])
 
@@ -107,20 +132,27 @@ export function useInventoryWebSocket() {
   const [inventory, setInventory] = useState<InventoryState>({})
   const [alerts, setAlerts] = useState<InventoryUpdate[]>([])
 
-  const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8000'}/ws/inventory`
+  const wsUrl = useMemo(() => {
+    const baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
+    // Ensure no double slashes and correct ending
+    const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+    return `${cleanBase}/ws/inventory`
+  }, [])
 
-  const { isConnected, lastMessage, subscribeToProduct } = useWebSocket({
+  const handleMessage = useCallback((data: InventoryUpdate) => {
+    if (data.type === 'inventory_update') {
+      setInventory(prev => ({
+        ...prev,
+        [data.product_id]: data.stock,
+      }))
+    } else if (data.type === 'low_stock_alert') {
+      setAlerts(prev => [...prev.slice(-9), data])
+    }
+  }, [])
+
+  const { isConnected, subscribeToProduct } = useWebSocket({
     url: wsUrl,
-    onMessage: (data) => {
-      if (data.type === 'inventory_update') {
-        setInventory(prev => ({
-          ...prev,
-          [data.product_id]: data.stock,
-        }))
-      } else if (data.type === 'low_stock_alert') {
-        setAlerts(prev => [...prev.slice(-9), data])
-      }
-    },
+    onMessage: handleMessage,
   })
 
   const updateLocalInventory = useCallback((productId: string, stock: number) => {
@@ -144,3 +176,4 @@ export function useInventoryWebSocket() {
     getStock: (productId: string) => inventory[productId],
   }
 }
+

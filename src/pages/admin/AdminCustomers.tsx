@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Search, Eye, Mail, Calendar, ChevronLeft, ChevronRight, FileSpreadsheet
 } from 'lucide-react'
@@ -7,18 +7,33 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Input } from '../../components/ui/input'
 import { Badge } from '../../components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
-import { mockAdminCustomers } from '../../data/mockData'
 import { User } from '../../types'
 import { downloadCsv } from '../../utils/csv'
 import { useAppDispatch } from '../../store/hooks'
 import { addToast } from '../../store/slices/uiSlice'
+import api from '../../services/api'
 
 export default function AdminCustomers() {
   const dispatch = useAppDispatch()
-  const [customers] = useState(mockAdminCustomers)
+  const [customers, setCustomers] = useState<User[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const response = await api.get('/admin/users', { 
+          params: { page: 1, page_size: 1000 } 
+        })
+        setCustomers(response.data.items || [])
+      } catch (error) {
+        console.error('Failed to load customers', error)
+        dispatch(addToast({ type: 'error', title: 'Error', message: 'Failed to load customers' }))
+      }
+    }
+    fetchCustomers()
+  }, [dispatch])
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch =

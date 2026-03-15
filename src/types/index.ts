@@ -99,6 +99,8 @@ export interface Product {
   images: string[]
   image_url?: string
   category: string
+  category_id?: number
+  category_slug?: string
   subcategory?: string
   brand?: string
   rating: number
@@ -120,10 +122,13 @@ export interface Product {
 
 export interface ProductVariant {
   id: string
-  name: string
-  type: 'size' | 'color' | 'material'
-  value: string
-  stock: number
+  product_id?: string
+  sku: string
+  attributes: Record<string, any>
+  price: number
+  originalPrice?: number
+  stock?: number
+  is_active?: boolean
 }
 
 export interface ProductSearch {
@@ -158,6 +163,9 @@ export interface CartItem {
   product?: Product
   quantity: number
   price: number
+  unit_price?: number
+  customization_id?: string | null
+  customization_data?: UserCustomization | null
   created_at: string
   updated_at: string
 }
@@ -186,20 +194,26 @@ export interface OrderItem {
   quantity: number
   unit_price: number
   total_price: number
+  customization_data?: UserCustomization | null
 }
 
 export interface Order {
   id: string
   orderNumber?: string
+  order_number?: string
   user_id: string
   status: string
   total_amount: number
+  subtotal?: number
+  discount_amount?: number
+  shipping_charge?: number
+  tax_amount?: number
+  currency?: string
   shipping_address: string
   billing_address?: string
   notes?: string | null
   payment_status: string
   items: OrderItem[]
-  subtotal?: number
   discount?: number
   tax?: number
   shipping?: number
@@ -210,7 +224,17 @@ export interface Order {
   updated_at: string
   estimatedDelivery?: string
   trackingNumber?: string
+  tracking?: OrderTracking[]
   timeline?: OrderTimeline[]
+}
+
+export interface OrderTracking {
+  id: string
+  order_id: string
+  status: string
+  description?: string
+  location?: string
+  created_at: string
 }
 
 export interface OrderTimeline {
@@ -419,4 +443,90 @@ export interface AdjustStockRequest {
   variant_id?: string
   adjustment: number
   reason: string
+}
+
+// Customization Interfaces
+export interface CustomizationOption {
+  id: string
+  field_id: string
+  value: string
+  label?: string
+  color_hex?: string
+  price_adjustment: number
+  is_active: boolean
+}
+
+export interface CustomizationField {
+  id: string
+  template_id: string
+  name: string
+  label: string
+  type: 'text' | 'image' | 'color' | 'font' | 'select'
+  is_required: boolean
+  placeholder?: string
+  default_value?: string
+  max_length?: number
+  options?: CustomizationOption[]
+  sort_order: number
+}
+
+export interface DesignLayer {
+  id: string
+  area_id: string
+  name: string
+  type: 'base_image' | 'mask' | 'overlay' | 'user_design'
+  image_url?: string
+  z_index: number
+  is_editable: boolean
+}
+
+export interface PrintArea {
+  id: string
+  template_id: string
+  name: string
+  width_mm: number
+  height_mm: number
+  top_offset_mm: number
+  left_offset_mm: number
+  preview_image_url?: string
+  layers?: DesignLayer[]
+  sort_order: number
+}
+
+export interface CustomizationTemplate {
+  id: string
+  product_id: string
+  name: string
+  description?: string
+  base_price_adjustment: number
+  is_active: boolean
+  fields?: CustomizationField[]
+  print_areas?: PrintArea[]
+  created_at?: string
+  updated_at?: string
+}
+
+export interface UserCustomization {
+  id: string
+  user_id?: string
+  session_id?: string
+  template_id: string
+  product_id: string
+  field_values: Record<string, any>
+  design_data: Record<string, any>
+  total_price_adjustment: number
+  preview_image_url?: string
+  is_ordered: boolean
+  created_at?: string
+}
+
+export interface CustomizationAsset {
+  id: string
+  file_path: string
+  file_name: string
+  mime_type: string
+  size_bytes: number
+  user_id?: string
+  session_id?: string
+  created_at?: string
 }

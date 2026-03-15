@@ -7,11 +7,13 @@ import { Card } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
-import { mockProducts, mockReviews } from '../data/mockData'
 import { formatPrice } from '../lib/utils'
 import { Product } from '../types'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice'
+import { addToCart } from '../store/slices/cartSlice'
+import api from '../services/api'
+import { fetchProductById } from '../store/slices/productSlice'
 import { addToast } from '../store/slices/uiSlice'
 
 export default function ProductDetail() {
@@ -20,7 +22,7 @@ export default function ProductDetail() {
   const dispatch = useAppDispatch()
   const { items: wishlistItems } = useAppSelector((state) => state.wishlist)
   const { user } = useAppSelector((state) => state.auth)
-  const [product, setProduct] = useState<Product | null>(null)
+  const { currentProduct: product, products, isLoading, error } = useAppSelector((state) => state.products)
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
@@ -31,23 +33,57 @@ export default function ProductDetail() {
   const [reviewTitle, setReviewTitle] = useState('')
   const [reviewComment, setReviewComment] = useState('')
   const [isSubmittingReview, setIsSubmittingReview] = useState(false)
+  const [reviews, setReviews] = useState<any[]>([])
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
 
   const isInWishlist = wishlistItems.some(item => item.id === product?.id)
 
   useEffect(() => {
-    const found = mockProducts.find(p => p.id === id)
-    setProduct(found || null)
+    if (id) {
+      dispatch(fetchProductById(id))
+      api.get(`/reviews/product/${id}`).then(res => {
+        const items = res.data?.data?.items || res.data?.items || []
+        setReviews(Array.isArray(items) ? items : [])
+      }).catch(e => console.error(e))
+    }
+  }, [id, dispatch])
+
+  useEffect(() => {
+    if (product?.variants?.length) {
+      const defaultAttributes: Record<string, string> = {}
+      const keys = Array.from(new Set(product.variants.flatMap(v => Object.keys(v.attributes))))
+      keys.forEach(key => {
+        defaultAttributes[key] = product.variants![0].attributes[key]
+      })
+      setSelectedAttributes(defaultAttributes)
+    }
+  }, [product])
+
+  useEffect(() => {
     setIsWishlisted(wishlistItems.some(item => item.id === id))
   }, [id, wishlistItems])
 
   const handleAddToCart = async () => {
     if (!product) return
     setIsAdding(true)
-    setTimeout(() => {
-      setIsAdding(false)
+    try {
+      const activeVariant = product.variants?.find(v => 
+        Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
+      )
+      
+      await dispatch(addToCart({ 
+        productId: product.id, 
+        quantity: quantity,
+        variantId: activeVariant?.id // Add variantId to cart if selected
+      } as any)).unwrap()
       setAdded(true)
       setTimeout(() => setAdded(false), 2000)
-    }, 500)
+    } catch (error) {
+      console.error('Failed to add to cart:', error)
+      dispatch(addToast({ type: 'error', title: 'Failed to add item to cart' }))
+    } finally {
+      setIsAdding(false)
+    }
   }
 
   const handleWishlistToggle = () => {
@@ -82,6 +118,16 @@ export default function ProductDetail() {
     setIsSubmittingReview(false)
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-muted-foreground mb-4">Loading product...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -95,7 +141,7 @@ export default function ProductDetail() {
     )
   }
 
-  const relatedProducts = mockProducts
+  const relatedProducts = products
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 4)
 
@@ -159,20 +205,61 @@ export default function ProductDetail() {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-              <span className="text-3xl sm:text-4xl font-bold">{formatPrice(product.price)}</span>
-              {product.originalPrice && (
+              <span className="text-3xl sm:text-4xl font-bold">
+                {formatPrice(
+                  product.variants?.find(v => 
+                    Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
+                  )?.price ?? product.price
+                )}
+              </span>
+              {(product.variants?.find(v => 
+                Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
+              )?.originalPrice ?? product.originalPrice) && (
                 <>
                   <span className="text-lg sm:text-xl text-muted-foreground line-through">
-                    {formatPrice(product.originalPrice)}
+                    {formatPrice(
+                      product.variants?.find(v => 
+                        Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
+                      )?.originalPrice ?? product.originalPrice ?? 0
+                    )}
                   </span>
                   <Badge variant="destructive" className="text-xs sm:text-sm">
-                    {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                    {Math.round((1 - (product.variants?.find(v => 
+                      Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
+                    )?.price ?? product.price) / (product.variants?.find(v => 
+                      Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
+                    )?.originalPrice ?? product.originalPrice ?? 1)) * 100)}% OFF
                   </Badge>
                 </>
               )}
             </div>
 
             <p className="text-muted-foreground text-sm sm:text-base">{product.description}</p>
+
+            {product.variants && product.variants.length > 0 && (
+              <div className="space-y-4 py-2">
+                {Array.from(new Set(product.variants.flatMap(v => Object.keys(v.attributes)))).map(key => (
+                  <div key={key} className="space-y-2">
+                    <label className="text-sm font-semibold capitalize">{key}:</label>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(new Set(product.variants!.map(v => v.attributes[key]))).map(value => (
+                        <button
+                          key={value}
+                          onClick={() => setSelectedAttributes(prev => ({ ...prev, [key]: value }))}
+                          className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                            selectedAttributes[key] === value
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-muted hover:border-primary/50'
+                          }`}
+                        >
+                          {value}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-muted/30 rounded-xl overflow-x-auto">
               <div className="flex items-center gap-2 min-w-fit">
@@ -403,28 +490,32 @@ export default function ProductDetail() {
                   </Card>
                 )}
 
-                {mockReviews.slice(0, 3).map((review) => (
-                  <Card key={review.id} className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <div className="font-medium">{review.user?.name}</div>
-                        <div className="flex items-center gap-1 mt-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-muted'}`}
-                            />
-                          ))}
+                {reviews.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">No reviews yet. Be the first to review!</div>
+                ) : (
+                  reviews.slice(0, 5).map((review) => (
+                    <Card key={review.id} className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <div className="font-medium">{review.user?.first_name || 'Anonymous User'}</div>
+                          <div className="flex items-center gap-1 mt-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-muted'}`}
+                              />
+                            ))}
+                          </div>
                         </div>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(review.created_at || review.createdAt).toLocaleDateString()}
+                        </span>
                       </div>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <h4 className="font-semibold mb-2">{review.title}</h4>
-                    <p className="text-muted-foreground">{review.comment}</p>
-                  </Card>
-                ))}
+                      <h4 className="font-semibold mb-2">{review.title}</h4>
+                      <p className="text-muted-foreground">{review.comment}</p>
+                    </Card>
+                  ))
+                )}
               </motion.div>
             )}
             {activeTab === 'shipping' && (
