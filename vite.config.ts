@@ -12,5 +12,12 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    hmr: {
+      host: 'sb-394hesp4snd1.vercel.run',
+      protocol: 'wss',
+    },
+  },
+  optimizeDeps: {
+    exclude: ['fabric'],
   },
 })
