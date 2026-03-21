@@ -27,7 +27,8 @@ export const fetchWishlist = createAsyncThunk<Product[]>('wishlist/fetchWishlist
     return rawItems.map((item: any) => {
       const p = item.product || item
       return {
-        id: String(p.id),
+        id: p.uid || String(p.id),
+        uid: p.uid,
         name: p.name || '',
         description: p.description || '',
         price: p.sale_price ?? p.base_price ?? 0,
@@ -50,11 +51,15 @@ export const fetchWishlist = createAsyncThunk<Product[]>('wishlist/fetchWishlist
 
 export const addToWishlistAsync = createAsyncThunk<Product, string>(
   'wishlist/addToWishlist',
-  async (productId, { dispatch, rejectWithValue }) => {
+  async (productUid, { dispatch, rejectWithValue }) => {
     try {
-      const response = await api.post<{ status: string; message: string; data: { product_id: string } }>('/wishlist', { product_id: productId })
+      const response = await api.post<{ status: string; message: string; data: { product_uid: string } }>('/wishlist/uid/' + productUid)
       handleApiSuccess(dispatch, 'Added to wishlist', 'Item added to your wishlist')
-      return response.data.data as any
+      // The backend response for adding to wishlist doesn't return the full product,
+      // so we might need to fetch the product details or rely on a re-fetch of the wishlist
+      // For now, we return a partial product with just the UID, which is not used by the reducer directly.
+      // The reducer for fulfilled will just show a toast.
+      return { uid: productUid } as Product // Return a minimal Product object with uid
     } catch (error: any) {
       const message = handleApiError(error, dispatch, 'Failed to add to wishlist')
       return rejectWithValue(message)
@@ -64,11 +69,11 @@ export const addToWishlistAsync = createAsyncThunk<Product, string>(
 
 export const removeFromWishlistAsync = createAsyncThunk<string, string>(
   'wishlist/removeFromWishlist',
-  async (productId, { dispatch, rejectWithValue }) => {
+  async (productUid, { dispatch, rejectWithValue }) => {
     try {
-      await api.delete(`/wishlist/${productId}`)
+      await api.delete('/wishlist/uid/' + productUid)
       handleApiSuccess(dispatch, 'Removed from wishlist', 'Item removed from your wishlist')
-      return productId
+      return productUid
     } catch (error: any) {
       const message = handleApiError(error, dispatch, 'Failed to remove from wishlist')
       return rejectWithValue(message)

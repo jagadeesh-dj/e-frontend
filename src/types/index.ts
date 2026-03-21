@@ -92,6 +92,7 @@ export interface ApiResponse<T> {
 
 export interface Product {
   id: string
+  uid?: string
   name: string
   description: string
   price: number
@@ -122,6 +123,7 @@ export interface Product {
 
 export interface ProductVariant {
   id: string
+  uid?: string
   product_id?: string
   sku: string
   attributes: Record<string, any>
@@ -159,7 +161,9 @@ export interface Brand {
 
 export interface CartItem {
   id: string
+  uid?: string
   product_id: string
+  product_uid?: string
   product?: Product
   quantity: number
   price: number
@@ -199,6 +203,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string
+  uid: string
   orderNumber?: string
   order_number?: string
   user_id: string
@@ -439,8 +444,8 @@ export interface InventoryItem {
 }
 
 export interface AdjustStockRequest {
-  product_id: string
-  variant_id?: string
+  product_uid: string
+  variant_uid?: string
   adjustment: number
   reason: string
 }

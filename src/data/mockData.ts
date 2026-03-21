@@ -401,6 +401,7 @@ export const mockUser: User = {
 
 export const mockOrders: Order[] = [
   {
+    uid: 'ord-uid-1',
     id: '1',
     orderNumber: 'ORD-2024-001',
     user_id: '1',
@@ -422,6 +423,7 @@ export const mockOrders: Order[] = [
     ],
   },
   {
+    uid: 'ord-uid-2',
     id: '2',
     orderNumber: 'ORD-2024-002',
     user_id: '1',
@@ -443,6 +445,7 @@ export const mockOrders: Order[] = [
     ],
   },
   {
+    uid: 'ord-uid-3',
     id: '3',
     orderNumber: 'ORD-2024-003',
     user_id: '1',
@@ -570,6 +573,7 @@ export const mockAdminProducts: Product[] = Array.from({ length: 50 }, (_, i) =>
 }))
 
 export const mockAdminOrders: Order[] = Array.from({ length: 75 }, (_, i) => ({
+  uid: `order-uid-${i + 1}`,
   id: `order-${i + 1}`,
   orderNumber: `ORD-2024-${String(i + 1).padStart(3, '0')}`,
   user_id: `user-${(i % 20) + 1}`,

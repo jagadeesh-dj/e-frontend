@@ -311,6 +311,103 @@
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
+
+  /* ── Hero Carousel ── */
+  .hero-carousel {
+    will-change: transform;
+  }
+
+  /* ── Scroll Arrow Buttons ── */
+  .scroll-arrow-btn {
+    @apply absolute top-1/2 -translate-y-1/2 z-10;
+    @apply w-9 h-9 rounded-full bg-white/90 border border-amber-100/60 shadow-surface-sm;
+    @apply flex items-center justify-center;
+    @apply text-gray-600 hover:text-primary hover:border-primary/25 hover:shadow-surface-md;
+    @apply opacity-0 group-hover/scroll:opacity-100 transition-all duration-300;
+    @apply cursor-pointer;
+    backdrop-filter: blur(8px);
+  }
+
+  @media (max-width: 640px) {
+    .scroll-arrow-btn {
+      @apply hidden;
+    }
+  }
+
+  /* ── Occasion Card ── */
+  .occasion-card {
+    will-change: transform;
+    transition: transform 0.35s ease;
+  }
+
+  .occasion-card:hover {
+    transform: translateY(-4px);
+  }
+
+  /* ── Product Card ── */
+  .product-card {
+    will-change: transform, box-shadow;
+  }
+
+  .product-card:hover {
+    transform: translateY(-3px);
+  }
+
+  /* ── Category Circle Card ── */
+  .category-circle-card {
+    will-change: transform;
+    transition: transform 0.35s ease, border-color 0.3s ease, box-shadow 0.35s ease;
+  }
+
+  .category-circle-card:hover {
+    transform: scale(1.05);
+  }
+
+  /* ── Need It Today Card ── */
+  .need-today-card {
+    will-change: transform;
+    transition: transform 0.35s ease;
+  }
+
+  .need-today-card:hover {
+    transform: translateY(-3px);
+  }
+
+  /* ── Trust Strip ── */
+  .trust-strip-item {
+    will-change: transform;
+    transition: transform 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+  }
+
+  .trust-strip-item:hover {
+    transform: translateY(-2px);
+  }
+
+  /* ── Dark Testimonial Card ── */
+  .testimonial-dark-card {
+    will-change: transform, background-color;
+    transition: transform 0.35s ease, background-color 0.35s ease;
+  }
+
+  .testimonial-dark-card:hover {
+    transform: translateY(-3px);
+  }
+
+  /* ── Category Card ── */
+  .category-card {
+    position: relative;
+    will-change: transform;
+    transition: transform 0.35s ease;
+  }
+
+  .category-card:hover {
+    transform: translateY(-4px);
+  }
+
+  /* ── Testimonial Card ── */
+  .testimonial-card {
+    will-change: transform, box-shadow;
+  }
 }
 
 @keyframes category-marquee {
@@ -321,4 +418,13 @@
   100% {
     transform: translateX(-33.3333%);
   }
+}
+
+/* ── Utility: Smooth transitions ── */
+.duration-400 {
+  transition-duration: 400ms;
+}
+
+.duration-600 {
+  transition-duration: 600ms;
 }

@@ -1,29 +1,14 @@
 import { useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Package, MapPin, CreditCard, Truck, Check, Loader2, X, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Package, MapPin, CreditCard, Truck, Check, Loader2, X, RefreshCw, FileText } from 'lucide-react'
 import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { fetchOrderById, cancelOrder } from '../store/slices/orderSlice'
-import { formatPrice, formatDate } from '../lib/utils'
+import { formatPrice, formatDate, cn } from '../lib/utils'
 
 const STATUS_STEPS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered']
-
-const STATUS_ICONS = [Package, RefreshCw, RefreshCw, Truck, Check] as const
-
-function getStatusColor(status: string) {
-  switch (status) {
-    case 'pending': return 'warning'
-    case 'confirmed': return 'secondary'
-    case 'processing': return 'secondary'
-    case 'shipped': return 'default'
-    case 'delivered': return 'success'
-    case 'cancelled': return 'destructive'
-    default: return 'secondary'
-  }
-}
+const STATUS_ICONS = [FileText, RefreshCw, Package, Truck, Check] as const
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>()
@@ -38,17 +23,17 @@ export default function OrderDetail() {
   }, [dispatch, id])
 
   const handleCancel = async () => {
-    if (!order?.id) return
-    if (!window.confirm('Are you sure you want to cancel this order?')) return
-    await dispatch(cancelOrder({ orderId: Number(order.id), reason: 'Cancelled by customer' }))
+    if (!order?.uid) return
+    if (!window.confirm('Are you certain you wish to cancel this meticulous order?')) return
+    await dispatch(cancelOrder({ orderUid: order.uid, reason: 'Cancelled by customer' }))
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-gray-500">Loading order details...</p>
+      <div className="min-h-[80vh] flex flex-col items-center justify-center bg-[#faf9f6]">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-300 mb-6" />
+        <div className="text-center font-serif text-2xl text-gray-400">
+          Retrieving order details...
         </div>
       </div>
     )
@@ -56,236 +41,224 @@ export default function OrderDetail() {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-muted-foreground mb-4">{error || 'Order not found'}</p>
-          <Link to="/orders">
-            <Button>Back to Orders</Button>
-          </Link>
-        </div>
+      <div className="min-h-[80vh] flex flex-col items-center justify-center bg-[#faf9f6]">
+        <p className="font-serif text-3xl text-gray-900 mb-6">{error || 'Manifest Not Found'}</p>
+        <Link to="/profile?tab=orders">
+          <Button className="h-12 px-8 bg-amber-700 text-white hover:bg-amber-800 rounded-none uppercase tracking-[0.2em] text-[10px] transition-colors">
+            Return to Ledger
+          </Button>
+        </Link>
       </div>
     )
   }
 
-  // Parse shipping address — backend stores as JSON object
   const shippingAddr = typeof order.shipping_address === 'string'
     ? (() => { try { return JSON.parse(order.shipping_address) } catch { return { raw: order.shipping_address } } })()
     : order.shipping_address || {}
 
-  // Current step index
   const currentStep = STATUS_STEPS.indexOf(order.status)
   const isCancelled = order.status === 'cancelled'
 
-  // Financial breakdown from backend fields
   const subtotal = order.subtotal ?? (order.total_amount - (order.shipping_charge || 0) - (order.tax_amount || 0))
   const shippingCharge = order.shipping_charge ?? 0
   const taxAmount = order.tax_amount ?? 0
   const discount = order.discount_amount ?? order.discount ?? 0
 
   return (
-    <div className="min-h-screen pb-20">
-      <div className="app-container py-8">
-        <Link to="/orders" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" />Back to Orders
-        </Link>
+    <div className="min-h-screen bg-[#faf9f6] pb-24 border-t border-gray-200/50">
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      {/* Header */}
+      <div className="max-w-[1400px] mx-auto px-6 py-10 lg:py-16">
+        <Link to="/profile?tab=orders" className="inline-flex items-center text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500 hover:text-amber-700 transition-colors mb-8">
+          <ArrowLeft className="w-3 h-3 mr-2" />Return to History
+        </Link>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-gray-200 pb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">
+            <h1 className="font-serif text-4xl lg:text-5xl text-gray-900 mb-2">
               Order #{order.order_number || (order as any).orderNumber || order.id}
             </h1>
-            <p className="text-muted-foreground mt-1">Placed on {formatDate(order.created_at)}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-400">Placed on {formatDate(order.created_at)}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge variant={getStatusColor(order.status) as any} className="text-sm px-4 py-1">
-              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-            </Badge>
+
+          <div className="flex items-center gap-6">
+            <span className={cn("text-[10px] uppercase tracking-widest px-3 py-1 font-bold border",
+              order.status === 'delivered' ? 'border-emerald-200 text-emerald-700 bg-emerald-50' :
+                order.status === 'cancelled' ? 'border-red-200 text-red-700 bg-red-50' :
+                  'border-amber-200 text-amber-700 bg-amber-50'
+            )}>
+              {order.status}
+            </span>
             {(order.status === 'pending' || order.status === 'confirmed') && (
-              <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50" onClick={handleCancel}>
-                <X className="w-4 h-4 mr-1" />Cancel
-              </Button>
+              <button
+                className="text-[10px] uppercase tracking-[0.2em] font-bold text-red-600 border-b border-transparent hover:border-red-600 transition-colors pb-0.5"
+                onClick={handleCancel}
+              >
+                Cancel Manifest
+              </button>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Order Tracking Progress */}
-        {!isCancelled && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <Card className="p-6">
-              <div className="flex items-center justify-between overflow-x-auto">
+      <div className="max-w-[1400px] mx-auto px-6 grid lg:grid-cols-12 gap-12 lg:gap-20">
+
+        {/* Left Column: Progress & Items */}
+        <div className="lg:col-span-7 space-y-16">
+
+          {/* Order Tracking Progress */}
+          {!isCancelled && (
+            <section className="bg-white border border-gray-200 p-8">
+              <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-900 border-b border-gray-100 pb-4 mb-8">Transit Trajectory</h2>
+              <div className="flex items-center justify-between overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
                 {STATUS_STEPS.map((status, index) => {
                   const Icon = STATUS_ICONS[index]
                   const isCompleted = currentStep >= index
                   const isCurrent = currentStep === index
                   return (
-                    <div key={status} className="flex items-center">
-                      <div className="flex flex-col items-center min-w-[60px]">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground'} ${isCurrent ? 'ring-4 ring-primary/20' : ''}`}>
-                          {index < currentStep ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                    <div key={status} className="flex items-center group flex-1">
+                      <div className="flex flex-col items-center">
+                        <div className={cn(
+                          "w-10 h-10 flex items-center justify-center transition-all bg-white border border-amber-700",
+                          isCompleted ? "bg-amber-700 text-white" : "border-gray-200 text-gray-300",
+                          isCurrent ? "outline outline-4 outline-amber-700/10 scale-110" : ""
+                        )}>
+                          {index < currentStep ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                         </div>
-                        <span className={`text-xs mt-2 capitalize text-center ${isCompleted ? 'font-medium text-primary' : 'text-muted-foreground'}`}>
+                        <span className={cn(
+                          "text-[9px] uppercase tracking-[0.2em] mt-4 whitespace-nowrap font-bold",
+                          isCompleted ? "text-amber-700" : "text-gray-400"
+                        )}>
                           {status}
                         </span>
                       </div>
                       {index < STATUS_STEPS.length - 1 && (
-                        <div className={`w-10 sm:w-16 h-0.5 mx-1 rounded-full transition-all duration-300 ${index < currentStep ? 'bg-primary' : 'bg-muted'}`} />
+                        <div className={cn(
+                          "h-[1px] flex-1 mx-4 transition-all -translate-y-[14px]",
+                          index < currentStep ? "bg-amber-700" : "bg-gray-200"
+                        )} />
                       )}
                     </div>
                   )
                 })}
               </div>
-            </Card>
-          </motion.div>
-        )}
+            </section>
+          )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            {/* Order Items */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Items ({order.items?.length || 0})</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {(order.items || []).map((item: any) => (
-                  <div key={item.id} className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl">
-                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {item.product?.images?.[0] ? (
-                        <img 
-                          src={typeof item.product.images[0] === 'string' ? item.product.images[0] : item.product.images[0].url} 
-                          alt={item.product_name} 
-                          className="w-full h-full object-cover" 
-                        />
-                      ) : (
-                        <Package className="w-8 h-8 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium line-clamp-1">{item.product_name}</h3>
-                      {item.variant_attrs && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {JSON.stringify(item.variant_attrs.variant || item.variant_attrs)}
-                        </p>
-                      )}
-                      <p className="text-sm text-muted-foreground">
-                        Qty: {item.quantity} × {formatPrice(item.unit_price || (item as any).unitPrice)}
+          {/* Items List */}
+          <section>
+            <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-900 border-b border-gray-200 pb-4 mb-6">Manifest Items</h2>
+            <div className="space-y-4">
+              {(order.items || []).map((item: any) => (
+                <div key={item.id} className="flex gap-6 border border-gray-200 p-6 bg-white shrink-0 hover:border-amber-700 transition-colors">
+                  <div className="w-24 aspect-[4/5] bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0 p-2">
+                    <img
+                      src={typeof item.product.images?.[0] === 'string' ? item.product.images[0] : item.product.images?.[0]?.url || '/placeholder.png'}
+                      alt={item.product_name}
+                      className="w-full h-full object-cover grayscale opacity-90 mix-blend-multiply"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col pt-2">
+                    <h3 className="font-serif text-2xl text-gray-900 mb-1">{item.product_name}</h3>
+                    {item.variant_attrs && (
+                      <p className="text-[9px] uppercase tracking-[0.2em] text-gray-500 font-bold mb-4">
+                        {typeof item.variant_attrs === 'object' ? Object.values(item.variant_attrs).join(' | ') : item.variant_attrs}
                       </p>
+                    )}
+                    <div className="mt-auto flex justify-between items-end border-t border-gray-100 pt-4">
+                      <p className="font-mono text-sm text-gray-500">Qty: {item.quantity} × {formatPrice(item.unit_price || item.unitPrice)}</p>
+                      <p className="font-mono text-lg font-semibold text-gray-900">{formatPrice(item.total_price || item.totalPrice)}</p>
                     </div>
-                    <p className="font-bold shrink-0">{formatPrice(item.total_price || (item as any).totalPrice)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Tracking History */}
+          {order.tracking && order.tracking.length > 0 && (
+            <section className="bg-white border border-gray-200 p-8">
+              <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-900 border-b border-gray-100 pb-4 mb-8">Logistics Timeline</h2>
+              <div className="pl-4 border-l border-gray-200 ml-2 space-y-8">
+                {order.tracking.map((t, idx) => (
+                  <div key={t.id || idx} className="relative pl-6">
+                    <div className="absolute w-[9px] h-[9px] bg-amber-700 -left-[29px] top-1 outline outline-[6px] outline-white" />
+                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-900 mb-1">{t.status}</p>
+                    {t.description && <p className="text-sm font-light text-gray-500 leading-relaxed mb-2 max-w-lg">{t.description}</p>}
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{formatDate(t.created_at)}</p>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </section>
+          )}
 
-            {/* Shipping Address */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />Shipping Address
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-muted-foreground space-y-0.5">
-                  {shippingAddr.full_name && <p className="font-medium text-foreground">{shippingAddr.full_name}</p>}
-                  {shippingAddr.address_line1 && <p>{shippingAddr.address_line1}</p>}
-                  {shippingAddr.address_line2 && <p>{shippingAddr.address_line2}</p>}
-                  {shippingAddr.city && <p>{shippingAddr.city}{shippingAddr.state ? `, ${shippingAddr.state}` : ''}{shippingAddr.postal_code ? ` - ${shippingAddr.postal_code}` : ''}</p>}
-                  {shippingAddr.phone && <p>{shippingAddr.phone}</p>}
-                  {shippingAddr.raw && <p className="whitespace-pre-line">{shippingAddr.raw}</p>}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tracking History */}
-            {order.tracking && order.tracking.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Truck className="w-5 h-5" />Tracking History
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {order.tracking.map((t, idx) => (
-                      <div key={t.id || idx} className="flex gap-4">
-                        <div className="flex flex-col items-center">
-                          <div className="w-3 h-3 rounded-full bg-primary mt-1 shrink-0" />
-                          {idx < ((order as any).tracking.length - 1) && <div className="w-px flex-1 bg-gray-200 mt-1" />}
-                        </div>
-                        <div className="pb-4">
-                          <p className="font-medium text-sm">{t.status}</p>
-                          {t.description && <p className="text-sm text-muted-foreground">{t.description}</p>}
-                          <p className="text-xs text-muted-foreground mt-1">{formatDate(t.created_at)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Payment Summary */}
-          <div>
-            <Card className="sticky top-24">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />Payment Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2.5">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>{formatPrice(subtotal)}</span>
-                  </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span>Discount</span>
-                      <span>-{formatPrice(discount)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Shipping</span>
-                    <span>{shippingCharge === 0 ? 'Free' : formatPrice(shippingCharge)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tax (GST)</span>
-                    <span>{formatPrice(taxAmount)}</span>
-                  </div>
-                  <div className="border-t pt-3 flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span>{formatPrice(order.total_amount)}</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Payment Status</span>
-                    <Badge variant={(order.payment_status === 'paid' || order.payment_status === 'completed') ? 'success' : 'warning'}>
-                      {(order.payment_status || 'pending').charAt(0).toUpperCase() + (order.payment_status || 'pending').slice(1)}
-                    </Badge>
-                  </div>
-                  {(order as any).payment_method && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Method</span>
-                      <span className="capitalize">{(order as any).payment_method}</span>
-                    </div>
-                  )}
-                  {(order as any).tracking_number && (
-                    <div className="mt-2 text-sm">
-                      <span className="text-muted-foreground">Tracking: </span>
-                      <span className="font-mono">{(order as any).tracking_number}</span>
-                    </div>
-                  )}
-                </div>
-
-                <Link to="/products">
-                  <Button variant="outline" className="w-full mt-2">Continue Shopping</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
         </div>
+
+        {/* Right Column: Informative Readouts */}
+        <div className="lg:col-span-5 space-y-8 pb-16">
+
+          <div className="bg-white border border-gray-200 p-8 sticky top-24">
+            <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-900 border-b border-gray-100 pb-4 mb-8">Financial Summary</h2>
+
+            <div className="space-y-4 mb-8 font-mono text-sm text-gray-600">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span className="text-gray-900">{formatPrice(subtotal)}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-amber-700">
+                  <span>Discount</span>
+                  <span>-{formatPrice(discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>Logistics</span>
+                <span className="text-gray-900">{shippingCharge === 0 ? 'Complimentary' : formatPrice(shippingCharge)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Taxes</span>
+                <span className="text-gray-900">{formatPrice(taxAmount)}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-end mb-8 pt-8 border-t border-gray-200 bg-gray-50 -mx-8 px-8 pb-8 -mb-8">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-900 pb-2">Total Billed</span>
+              <span className="font-serif text-3xl text-gray-900">{formatPrice(order.total_amount)}</span>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 p-8">
+            <div className="space-y-4 mb-8">
+              <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-900 border-b border-gray-100 pb-4 flex justify-between items-center">
+                <span>Payment Clearances</span>
+                <span className={cn(
+                  (order.payment_status === 'paid' || order.payment_status === 'completed') ? 'text-emerald-700' : 'text-amber-700'
+                )}>
+                  {order.payment_status || 'pending'}
+                </span>
+              </div>
+              {(order as any).payment_method && (
+                <div className="flex justify-between items-center text-xs font-mono text-gray-500 pt-2">
+                  <span className="uppercase tracking-widest font-bold">Gateway</span>
+                  <span className="text-gray-900">{(order as any).payment_method}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Delivery Info Block */}
+            <div className="space-y-4 pt-4 border-t border-gray-100">
+              <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-900 pb-2">Destination Coordinate</h3>
+              <div className="text-sm font-light text-gray-600 leading-relaxed max-w-sm">
+                {shippingAddr.full_name && <p className="font-mono font-semibold text-gray-900 uppercase">{shippingAddr.full_name}</p>}
+                {shippingAddr.address_line1 && <p>{shippingAddr.address_line1}</p>}
+                {shippingAddr.address_line2 && <p>{shippingAddr.address_line2}</p>}
+                {shippingAddr.city && <p>{shippingAddr.city}{shippingAddr.state ? `, ${shippingAddr.state}` : ''}{shippingAddr.postal_code ? ` - ${shippingAddr.postal_code}` : ''}</p>}
+                {shippingAddr.phone && <p className="pt-2">{shippingAddr.phone}</p>}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -26,14 +26,14 @@ class ApiClient {
       async (error: AxiosError) => {
         const originalRequest = error.config as any
         const url = originalRequest?.url || ''
-        
-        const isAuthEndpoint = url.includes('/login') || 
-                               url.includes('/register') || 
-                               url.includes('/refresh')
-        
+
+        const isAuthEndpoint = url.includes('/login') ||
+          url.includes('/register') ||
+          url.includes('/refresh')
+
         if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
           originalRequest._retry = true
-          
+
           const refreshToken = localStorage.getItem('refresh_token');
           if (refreshToken) {
             try {
@@ -43,7 +43,7 @@ class ApiClient {
               const { access_token, refresh_token: newRefreshToken } = response.data.data;
               localStorage.setItem('access_token', access_token);
               localStorage.setItem('refresh_token', newRefreshToken);
-              
+
               if (error.config) {
                 error.config.headers.Authorization = `Bearer ${access_token}`;
                 return this.client(error.config);
@@ -94,7 +94,7 @@ export const authApi = {
 // Profile API - Protected routes
 export const profileApi = {
   get: () => api.get('/profile'),
-  
+
   create: (data: {
     phone?: string;
     avatar_url?: string;
@@ -131,14 +131,14 @@ export const wishlistApi = {
   list: (params?: { skip?: number; limit?: number }) =>
     api.get('/wishlist', { params }),
 
-  add: (productId: string) => 
-    api.post('/wishlist', { product_id: productId }),
+  add: (productUid: string) =>
+    api.post('/wishlist/uid/' + productUid),
 
-  remove: (productId: string) => 
-    api.delete(`/wishlist/${productId}`),
+  remove: (productUid: string) =>
+    api.delete('/wishlist/uid/' + productUid),
 
-  check: (productId: string) => 
-    api.get(`/wishlist/check/${productId}`),
+  check: (productUid: string) =>
+    api.get('/wishlist/check/' + productUid),
 
   clear: () => api.delete('/wishlist'),
 };
@@ -148,7 +148,7 @@ export const productsApi = {
   list: (params?: { skip?: number; limit?: number; category?: string; brand?: string }) =>
     api.get('/products', { params }),
 
-  get: (id: string) => api.get(`/products/${id}`),
+  get: (uid: string) => api.get(`/products/uid/${uid}`),
 
   search: (data: {
     query?: string;
@@ -165,7 +165,7 @@ export const productsApi = {
 
   getBrands: () => api.get('/products/brands'),
 
-  getReviews: (productId: string) => 
+  getReviews: (productId: string) =>
     api.get(`/reviews?product_id=${productId}`),
 
   addReview: (data: {
@@ -180,13 +180,13 @@ export const productsApi = {
 export const cartApi = {
   get: () => api.get('/cart'),
 
-  addItem: (data: { product_id: string; quantity: number }) =>
+  addItem: (data: { product_uid: string; quantity: number; variant_uid?: string }) =>
     api.post('/cart/items', data),
 
-  updateItem: (itemId: string, data: { quantity: number }) =>
-    api.put(`/cart/items/${itemId}`, data),
+  updateItem: (itemUid: string, data: { quantity: number }) =>
+    api.put(`/cart/items/uid/${itemUid}`, data),
 
-  removeItem: (itemId: string) => api.delete(`/cart/items/${itemId}`),
+  removeItem: (itemUid: string) => api.delete(`/cart/items/uid/${itemUid}`),
 
   clear: () => api.delete('/cart'),
 
@@ -319,8 +319,8 @@ export const inventoryApi = {
 
 // Customizations API - User routes
 export const customizationsApi = {
-  getProductTemplate: (productId: string) => 
-    api.get(`/customizations/products/${productId}/template`),
+  getProductTemplate: (productUid: string) =>
+    api.get(`/customizations/products/uid/${productUid}/template`),
 
   saveCustomization: (data: {
     template_id: string;
@@ -331,7 +331,7 @@ export const customizationsApi = {
     preview_image_url?: string;
   }) => api.post('/customizations/', data),
 
-  getCustomization: (customizationId: string) => 
+  getCustomization: (customizationId: string) =>
     api.get(`/customizations/${customizationId}`),
 
   uploadAsset: (file: File) => {

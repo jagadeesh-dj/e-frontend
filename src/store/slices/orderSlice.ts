@@ -47,9 +47,9 @@ export const fetchOrders = createAsyncThunk<
 
 export const fetchOrderById = createAsyncThunk<Order, string>(
   'orders/fetchOrderById',
-  async (id, { dispatch, rejectWithValue }) => {
+  async (uid, { dispatch, rejectWithValue }) => {
     try {
-      const response = await api.get<{ success: boolean; data: Order }>(`/orders/${id}`)
+      const response = await api.get<{ success: boolean; data: Order }>(`/orders/${uid}`)
       return response.data.data
     } catch (error: any) {
       const message = handleApiError(error, dispatch, 'Failed to fetch order')
@@ -74,13 +74,13 @@ export const createOrder = createAsyncThunk<
 })
 
 export const cancelOrder = createAsyncThunk<
-  { id: number; reason: string },
-  { orderId: number; reason: string }
->('orders/cancelOrder', async ({ orderId, reason }, { dispatch, rejectWithValue }) => {
+  { uid: string; reason: string },
+  { orderUid: string; reason: string }
+>('orders/cancelOrder', async ({ orderUid, reason }, { dispatch, rejectWithValue }) => {
   try {
-    await api.post(`/orders/${orderId}/cancel`, { reason })
+    await api.post(`/orders/${orderUid}/cancel`, { reason })
     handleApiSuccess(dispatch, 'Order Cancelled', 'Your order has been cancelled')
-    return { id: orderId, reason }
+    return { uid: orderUid, reason }
   } catch (error: any) {
     const message = handleApiError(error, dispatch, 'Failed to cancel order')
     return rejectWithValue(message)
@@ -154,9 +154,9 @@ const orderSlice = createSlice({
         state.error = action.payload as string
       })
       .addCase(cancelOrder.fulfilled, (state, action) => {
-        const order = state.orders.find((o) => String(o.id) === String(action.payload.id))
+        const order = state.orders.find((o) => o.uid === action.payload.uid)
         if (order) order.status = 'cancelled'
-        if (state.currentOrder && String(state.currentOrder.id) === String(action.payload.id)) {
+        if (state.currentOrder && state.currentOrder.uid === action.payload.uid) {
           state.currentOrder.status = 'cancelled'
         }
       })

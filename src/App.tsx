@@ -68,8 +68,8 @@ function AppContent() {
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
           <Route path="products" element={<Products />} />
-          <Route path="products/:id" element={<ProductDetail />} />
-          <Route path="customize/:productId" element={<CustomizeProduct />} />
+          <Route path="products/:uid" element={<ProductDetail />} />
+          <Route path="customize/:uid" element={<CustomizeProduct />} />
           <Route path="cart" element={<Cart />} />
           <Route path="wishlist" element={<Wishlist />} />
           <Route path="login" element={<Login />} />

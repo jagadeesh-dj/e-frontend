@@ -1,517 +1,601 @@
 import { Link } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Shield, Truck, CreditCard, RotateCcw, Star, ChevronLeft, ChevronRight, Heart, Plus } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { AnimatePresence, motion, useScroll, useTransform, useSpring } from 'framer-motion'
+import {
+  ArrowRight,
+  Shield,
+  Truck,
+  RotateCcw,
+  Star,
+  Heart,
+  Sparkles,
+  Gift,
+  Clock,
+  ChevronRight,
+  ShoppingBag,
+  Gem,
+  CheckCircle2,
+  Calendar,
+  Search,
+  Palette,
+  Camera,
+  Layers,
+} from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '../components/ui/button'
-import { Card } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-import { formatPrice } from '../lib/utils'
+import { formatPrice, cn } from '../lib/utils'
 import api from '../services/api'
 import { mapProduct } from '../store/slices/productSlice'
-import { Product, Category } from '../types'
+import { Product } from '../types'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice'
 import { addToast } from '../store/slices/uiSlice'
-import { cn } from '../lib/utils'
 
-const features = [
-  { icon: Shield, title: 'Secure Payments', desc: 'Your transactions are fully encrypted and secure' },
-  { icon: Truck, title: 'Fast Shipping', desc: 'Free delivery on orders over $50' },
-  { icon: CreditCard, title: 'Easy Checkout', desc: 'Multiple payment methods available' },
-  { icon: RotateCcw, title: 'Easy Returns', desc: '30-day hassle-free return policy' },
+/* ── Static Data ── */
+
+
+const occasions = [
+  { name: 'Birthday', icon: Gift },
+  { name: 'Anniversary', icon: Heart },
+  { name: 'Wedding', icon: Gem },
+  { name: 'Corporate', icon: Shield },
+  { name: 'Festive', icon: Sparkles }
 ]
 
-const testimonials = [
+const heroSlides = [
   {
-    name: 'Sarah Johnson',
-    role: 'Verified Buyer',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-    rating: 5,
-    text: 'Absolutely love shopping here! The product quality is outstanding and the delivery was super fast.',
+    title: 'The Art of',
+    titleAccent: 'Gifting',
+    subtitle: 'Meticulously curated premium gifts for life’s most celebrated moments.',
+    image: 'https://images.unsplash.com/photo-1549464104-bb22ca201532?q=80&w=2070&auto=format&fit=crop',
+    badge: 'Limited Edition'
   },
   {
-    name: 'Michael Chen',
-    role: 'Verified Buyer',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-    rating: 5,
-    text: 'Best online shopping experience I have ever had. The customer service team is incredibly helpful.',
-  },
-  {
-    name: 'Emily Davis',
-    role: 'Verified Buyer',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-    rating: 5,
-    text: 'The products exceeded my expectations. Will definitely be ordering again soon!',
+    title: 'Signature',
+    titleAccent: 'Treasures',
+    subtitle: 'Exceptional quality meets unparalleled design in our latest artisanal collection.',
+    image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?q=80&w=2070&auto=format&fit=crop',
+    badge: 'New Collection'
   },
 ]
 
-const promoSlides = [
-  {
-    title: 'Premium Gift Drops With Up To 50% Off',
-    subtitle: 'Explore curated cakes, flowers, and personalized gift boxes designed for every occasion.',
-    image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=1800&auto=format&fit=crop&q=80',
-    primaryCta: { label: 'Shop Deals', href: '/products' },
-    secondaryCta: { label: 'View Combos', href: '/products?category=combos' },
-    badge: 'Mega Promo Collection',
-  },
-  {
-    title: 'Same-Day Celebration Essentials',
-    subtitle: 'Order fresh flowers, gourmet cakes, and gift bundles before noon for same-day delivery.',
-    image: 'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?w=1800&auto=format&fit=crop&q=80',
-    primaryCta: { label: 'Order Now', href: '/products?category=flowers' },
-    secondaryCta: { label: 'Browse Cakes', href: '/products?category=cakes' },
-    badge: 'Express Delivery',
-  },
-  {
-    title: 'Personalized Gifts For Every Moment',
-    subtitle: 'Create custom mugs, frames, and handcrafted keepsakes with premium finishes.',
-    image: 'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=1800&auto=format&fit=crop&q=80',
-    primaryCta: { label: 'Customize Gifts', href: '/products?category=personalized' },
-    secondaryCta: { label: 'Explore Catalog', href: '/products' },
-    badge: 'Limited Edition',
-  },
+const partners = [
+  "Vogue", "Harper's Bazaar", "Forbes Lux", "The New York Times", "Elle Decor", "Tatler", "GQ Style"
 ]
+
+const priceGuides = [
+  { label: 'Gifts Under $100', href: '/products?max_price=100' },
+  { label: 'Gifts Under $250', href: '/products?max_price=250' },
+  { label: 'Gifts Under $500', href: '/products?max_price=500' },
+  { label: 'Bespoke Luxury', href: '/products?min_price=500' },
+]
+
+const SLIDE_DURATION = 6000
+
+/* ═══════════════ HOME PAGE ═══════════════ */
+
 export default function Home() {
   const dispatch = useAppDispatch()
   const { items: wishlistItems } = useAppSelector((state) => state.wishlist)
   const { isAuthenticated } = useAppSelector((state) => state.auth)
-  const [currentTestimonial, setCurrentTestimonial] = useState(0)
-  const [currentPromo, setCurrentPromo] = useState(0)
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [bestsellers, setBestsellers] = useState<Product[]>([])
+  const [feedProducts, setFeedProducts] = useState<Product[]>([])
+  const [isPageLoading, setIsPageLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [emailValue, setEmailValue] = useState('')
 
+  const containerRef = useRef<HTMLDivElement>(null)
+  const observerTarget = useRef<HTMLDivElement>(null)
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  })
+
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30 })
+  const heroY = useTransform(smoothProgress, [0, 0.2], [0, 80])
+  const heroOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0])
+
+  // Fetch initial data
   useEffect(() => {
-    const fetchHomeData = async () => {
+    const fetchInitialData = async () => {
       try {
-        const [productsRes, categoriesRes] = await Promise.all([
-          api.get('/products'),
-          api.get('/categories')
-        ])
-        const productsList = productsRes.data.data || []
-        setFeaturedProducts(productsList.map(mapProduct).slice(0, 6) || [])
-        setCategories(categoriesRes.data.data || [])
+        const res = await api.get('/products', { params: { page: 1, page_size: 4 } })
+        const productsList = (res.data.data || []).map(mapProduct)
+        setBestsellers(productsList)
       } catch (err) {
-        console.error("Failed to load home data", err)
+        console.error('Failed to load home data', err)
       }
     }
-    fetchHomeData()
+    fetchInitialData()
   }, [])
+
+  // Infinite Scroll Logic
+  const fetchMoreProducts = useCallback(async () => {
+    if (isPageLoading || !hasMore) return
+    setIsPageLoading(true)
+    try {
+      const res = await api.get('/products', { params: { page: page, page_size: 8 } })
+      const productsList = (res.data.data || []).map(mapProduct)
+      
+      if (productsList.length === 0) {
+        setHasMore(false)
+      } else {
+        setFeedProducts(prev => [...prev, ...productsList])
+        setPage(prev => prev + 1)
+      }
+    } catch (err) {
+      console.error('Failed to fetch more products', err)
+    } finally {
+      setIsPageLoading(false)
+    }
+  }, [page, isPageLoading, hasMore])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore) {
+          fetchMoreProducts()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current)
+    }
+
+    return () => observer.disconnect()
+  }, [fetchMoreProducts, hasMore])
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length)
-    }, 5000)
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
+    }, SLIDE_DURATION)
     return () => clearInterval(timer)
   }, [])
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentPromo((prev) => (prev + 1) % promoSlides.length)
-    }, 4500)
-    return () => clearInterval(timer)
-  }, [])
-
-  const currentSlide = promoSlides[currentPromo]
-  const goToPrevPromo = () => setCurrentPromo((prev) => (prev - 1 + promoSlides.length) % promoSlides.length)
-  const goToNextPromo = () => setCurrentPromo((prev) => (prev + 1) % promoSlides.length)
 
   const handleWishlistToggle = (product: Product, e: React.MouseEvent) => {
     e.preventDefault()
     if (!isAuthenticated) {
-      dispatch(addToast({ type: 'warning', title: 'Please login to save items' }))
+      dispatch(addToast({ type: 'warning', title: 'Please login to save pieces' }))
       return
     }
-    const isInWishlist = wishlistItems.some(item => item.id === product.id)
+    const isInWishlist = wishlistItems.some((item) => item.id === (product.uid || product.id))
     if (isInWishlist) {
-      dispatch(removeFromWishlist(product.id))
+      dispatch(removeFromWishlist(product.uid || product.id))
     } else {
       dispatch(addToWishlist(product))
     }
   }
 
+  const slide = heroSlides[currentSlide]
+
   return (
-    <div className="relative overflow-hidden">
-      {/* Background Visual Enhancements */}
-      <div className="glow-mesh top-0 left-0 w-[500px] h-[500px]" />
-      <div className="glow-mesh bottom-0 right-0 w-[600px] h-[600px] opacity-30" />
-      
-      <section className="app-section pt-5 sm:pt-6">
-        <div className="app-container">
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
-            className="relative isolate overflow-hidden rounded-[2rem] border border-white/70 shadow-surface-md"
-          >
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentSlide.image}
-                initial={{ opacity: 0, scale: 1.06 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.03 }}
-                transition={{ duration: 0.65, ease: 'easeOut' }}
-                src={currentSlide.image}
-                alt="Promo Banner"
-                className="absolute inset-0 h-full w-full object-cover"
+    <div ref={containerRef} className="bg-[#faf9f6]">
+      {/* ═══════════ 1. CLASSICAL HERO ═══════════ */}
+      <section className="relative h-[85vh] w-full overflow-hidden bg-black">
+        <motion.div 
+          style={{ y: heroY, opacity: heroOpacity }}
+          className="absolute inset-0 w-full h-full"
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.2 }}
+              className="absolute inset-0"
+            >
+              <img 
+                src={slide.image} 
+                className="w-full h-full object-cover opacity-60" 
+                alt="Classical Gifting" 
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?q=80&w=2070&auto=format&fit=crop'
+                }}
               />
-            </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1e1912]/85 via-[#2f2518]/55 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
 
-            <AnimatePresence mode="wait">
-                <div className="relative flex min-h-[430px] flex-col justify-end px-6 py-8 text-white sm:min-h-[520px] sm:px-10 sm:py-10 lg:min-h-[620px] lg:px-14">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1, duration: 0.5 }}
-                  >
-                    <Badge className="mb-5 w-fit bg-white/15 text-white backdrop-blur-md border-white/20" size="lg">
-                      {currentSlide.badge}
-                    </Badge>
-                  </motion.div>
-
-                  <motion.h1
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.6 }}
-                    className="max-w-3xl text-4xl font-bold leading-[1.1] sm:text-6xl lg:text-7xl"
-                  >
-                    {currentSlide.title}
-                  </motion.h1>
-
-                  <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.5 }}
-                    className="mt-6 max-w-2xl text-base text-white/90 sm:text-lg lg:text-xl font-medium"
-                  >
-                    {currentSlide.subtitle}
-                  </motion.p>
-
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.5 }}
-                    className="mt-10 flex flex-wrap gap-4"
-                  >
-                    <Link to={currentSlide.primaryCta.href}>
-                      <Button size="lg" className="btn-premium h-14 px-8 text-lg font-semibold gap-2">
-                        {currentSlide.primaryCta.label}
-                        <ArrowRight className="h-5 w-5" />
-                      </Button>
-                    </Link>
-                    <Link to={currentSlide.secondaryCta.href}>
-                      <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-white/30 bg-white/5 text-white hover:bg-white/15 backdrop-blur-sm">
-                        {currentSlide.secondaryCta.label}
-                      </Button>
-                    </Link>
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6, duration: 0.8 }}
-                    className="mt-12 grid w-full max-w-2xl grid-cols-3 gap-4 text-center sm:gap-6"
-                  >
-                    {[
-                      { value: '50K+', label: 'Happy Customers' },
-                      { value: '1000+', label: 'Curated Products' },
-                      { value: '4.9', label: 'Customer Rating' }
-                    ].map((stat, i) => (
-                      <div key={i} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-md">
-                        <p className="text-2xl font-bold sm:text-3xl text-primary">{stat.value}</p>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-white/60 sm:text-xs mt-1">{stat.label}</p>
-                      </div>
-                    ))}
-                  </motion.div>
-                </div>
-            </AnimatePresence>
-
-            <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between p-4 sm:p-5">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
-                onClick={goToPrevPromo}
-                aria-label="Previous promo slide"
-              >
-                <ChevronLeft className="h-5 w-5" />
+        <div className="absolute inset-0 flex flex-col justify-center items-center px-6 text-center z-10">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="max-w-4xl"
+          >
+            <Badge className="mb-6 bg-white/10 backdrop-blur-md border border-white/20 text-white uppercase tracking-[0.4em] px-8 py-2 font-light text-[10px] rounded-none">
+              {slide.badge}
+            </Badge>
+            <h1 className="font-serif text-6xl md:text-8xl lg:text-9xl text-white leading-[1.1] mb-8 tracking-tight">
+              {slide.title} <br/>
+              <span className="italic font-light text-gray-300">{slide.titleAccent}</span>
+            </h1>
+            <p className="text-white/70 max-w-xl text-lg md:text-xl font-light leading-relaxed mb-12">
+              {slide.subtitle}
+            </p>
+            <Link to="/products">
+              <Button size="lg" className="bg-white text-gray-900 hover:bg-amber-800 hover:text-white rounded-none h-14 px-12 text-[10px] tracking-[0.3em] font-bold uppercase transition-all duration-500">
+                Explore Collections
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
-                onClick={goToNextPromo}
-                aria-label="Next promo slide"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            </div>
-
-            <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur-sm">
-              {promoSlides.map((_, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => setCurrentPromo(index)}
-                  aria-label={`Go to promo slide ${index + 1}`}
-                  className={`h-2 rounded-full transition-all ${
-                    index === currentPromo ? 'w-8 bg-white' : 'w-2 bg-white/45 hover:bg-white/70'
-                  }`}
-                />
-              ))}
-            </div>
+            </Link>
           </motion.div>
         </div>
-      </section>
 
-      <section className="py-24 bg-white/30 backdrop-blur-sm relative">
-        <div className="app-container">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 sm:gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="group flex flex-col items-center text-center p-8 rounded-[2.5rem] bg-white border border-white/60 shadow-surface-sm hover:shadow-surface-md hover:border-primary/20 transition-all duration-500"
-              >
-                <div className="w-20 h-20 rounded-3xl bg-amber-50 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-100 transition-all duration-500">
-                  <feature.icon className="w-10 h-10 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed px-4">{feature.desc}</p>
-              </motion.div>
-            ))}
-          </div>
+        <div className="absolute bottom-12 flex gap-4 z-20">
+           {heroSlides.map((_, i) => (
+             <button 
+               key={i} 
+               onClick={() => setCurrentSlide(i)}
+               className={cn("h-0.5 transition-all duration-700", currentSlide === i ? "w-12 bg-white" : "w-6 bg-white/30")}
+             />
+           ))}
         </div>
       </section>
 
-      <section className="py-20 bg-gray-50">
-        <div className="app-container">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Products</h2>
-              <p className="text-gray-500">Handpicked selections from our premium collection</p>
+      {/* ═══════════ 2. INFINITE MARQUEE (Partners) ═══════════ */}
+      <div className="bg-white border-b border-gray-100 overflow-hidden py-8">
+         <motion.div 
+           animate={{ x: [0, -1000] }}
+           transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+           className="flex gap-20 whitespace-nowrap px-10 items-center"
+         >
+            {[...partners, ...partners, ...partners].map((partner, i) => (
+              <span key={i} className="text-gray-300 font-serif text-xl md:text-2xl tracking-widest">{partner}</span>
+            ))}
+         </motion.div>
+      </div>
+
+      {/* ═══════════ 3. OCCASION NAVIGATION ═══════════ */}
+      <section className="py-20 border-b border-gray-200/50 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6">
+           <div className="flex flex-wrap justify-between gap-8 items-center">
+              {occasions.map((occ, i) => (
+                <Link key={i} to={`/products?category=${occ.name.toLowerCase()}`} className="flex flex-col items-center gap-4 group min-w-[100px]">
+                   <div className="w-16 h-16 rounded-full border border-gray-100 flex items-center justify-center transition-all duration-500 group-hover:border-amber-900 group-hover:bg-amber-50 text-gray-400 group-hover:text-amber-900">
+                      <occ.icon className="w-6 h-6" strokeWidth={1} />
+                   </div>
+                   <span className="text-[10px] uppercase font-semibold tracking-widest text-gray-400 group-hover:text-gray-900">{occ.name}</span>
+                </Link>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══════════ 4. THE COLLECTIONS (Editorial Showcase) ═══════════ */}
+      <section className="py-32 relative overflow-hidden bg-white">
+        {/* Subtle Decorative Background Element */}
+        <div className="absolute top-0 right-0 w-1/3 h-full bg-[#faf9f6] -z-10" />
+        
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-20 gap-8">
+            <div className="max-w-2xl">
+              <span className="text-amber-800 text-[10px] uppercase tracking-[0.4em] font-bold mb-4 block">Seasonal Edit</span>
+              <h2 className="font-serif text-5xl md:text-6xl text-gray-900 leading-tight">Curated <span className="italic font-light text-gray-400">Atmospheres</span></h2>
+              <p className="mt-6 text-gray-500 font-light text-lg leading-relaxed">
+                Discover our meticulously assembled collections, each designed to evoke a unique sensory experience and celebrate life's most profound milestones.
+              </p>
             </div>
-            <Link to="/products">
-              <Button variant="ghost" className="gap-2 text-primary hover:text-amber-700">
-                View All
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+            <Link 
+              to="/products" 
+              className="group flex items-center gap-4 text-[10px] uppercase tracking-[0.3em] font-bold text-gray-900"
+            >
+              Explore All <div className="w-12 h-[1px] bg-gray-200 group-hover:w-20 group-hover:bg-amber-800 transition-all duration-500" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {featuredProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Link to={`/products/${product.id}`}>
-                  <Card className="group relative h-full flex flex-col overflow-hidden border-none bg-white p-3 transition-all duration-500 hover:shadow-[0_22px_60px_-15px_rgba(0,0,0,0.12)] rounded-[2rem]">
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-gray-50">
-                      <img
-                        src={(product.images && product.images[0]) || '/placeholder.png'}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                      />
-                      
-                      {/* Premium Badge System */}
-                      {product.originalPrice && (
-                        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                          <Badge className="bg-rose-500 border-none shadow-md text-[10px] font-bold uppercase tracking-wider h-6 px-2.5">
-                            Sale
-                          </Badge>
-                          <Badge className="bg-white/90 backdrop-blur-md border-none text-gray-900 shadow-sm text-[10px] font-bold h-6 px-2.5">
-                            -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-                          </Badge>
-                        </div>
-                      )}
-
-                      {/* Floating Wishlist Button */}
-                      <div className="absolute top-3 right-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            "h-9 w-9 rounded-full bg-white/80 border border-white/50 shadow-lg backdrop-blur-md transition-all",
-                            wishlistItems.some(w => w.id === product.id) 
-                              ? "text-rose-500 bg-white" 
-                              : "text-gray-600 hover:text-rose-500 hover:bg-white"
-                          )}
-                          onClick={(e) => handleWishlistToggle(product, e)}
-                        >
-                          <Heart className={cn("h-4.5 w-4.5", wishlistItems.some(w => w.id === product.id) && "fill-current")} />
-                        </Button>
-                      </div>
-
-                      {/* View Button Overlay (Subtle) */}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
-                    </div>
-
-                    <div className="flex flex-col flex-1 mt-5 px-1 pb-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold font-sans">
-                          {product.category || 'Collection'}
-                        </span>
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100/50">
-                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                          <span className="text-[11px] font-bold text-gray-700">{product.rating}</span>
-                        </div>
-                      </div>
-
-                      <h3 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-primary transition-colors line-clamp-2 min-h-[3rem]">
-                        {product.name}
-                      </h3>
-
-                      <div className="mt-auto flex items-end justify-between pt-4">
-                        <div className="flex flex-col">
-                          {product.originalPrice && (
-                            <span className="text-xs text-gray-400 line-through mb-0.5">
-                              {formatPrice(product.originalPrice)}
-                            </span>
-                          )}
-                          <span className="text-xl font-black text-gray-900 tracking-tight">
-                            {formatPrice(product.price)}
-                          </span>
-                        </div>
-                        
-                        <Button size="icon" className="h-10 w-10 rounded-2xl btn-premium bg-primary shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all">
-                          <Plus className="h-5 w-5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 bg-white">
-        <div className="app-container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Shop by Category</h2>
-            <p className="text-gray-500">Explore our curated collections</p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((category, index) => (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                viewport={{ once: true }}
-              >
-                <Link to={`/products?category=${category.slug}`}>
-                  <Card hover className="card-premium overflow-hidden text-center p-6 border-white/40 bg-white/50 backdrop-blur-md group">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-gray-100 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all duration-300 transform group-hover:scale-110">
-                      <img
-                        src={category.image || '/placeholder.png'}
-                        alt={category.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors">{category.name}</h3>
-                    <p className="text-xs font-semibold text-primary/70 uppercase tracking-tighter mt-1">{category.productCount || 0} Items</p>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 bg-gray-50">
-        <div className="app-container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">What Our Customers Say</h2>
-            <p className="text-gray-500">Join thousands of satisfied customers</p>
-          </div>
-
-          <div className="max-w-5xl mx-auto">
-            <div className="relative">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentTestimonial}
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                  transition={{ duration: 0.5, ease: 'easeOut' }}
-                  className="bg-white/60 backdrop-blur-md rounded-[3rem] p-10 md:p-16 text-center shadow-surface-md border border-white/80 relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 p-8 opacity-[0.05] pointer-events-none">
-                    <Star className="w-40 h-40 fill-primary" />
-                  </div>
-                  
-                  <div className="w-24 h-24 mx-auto mb-8 rounded-full overflow-hidden ring-4 ring-primary/10 shadow-xl">
-                    <img
-                      src={testimonials[currentTestimonial].avatar}
-                      alt={testimonials[currentTestimonial].name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex justify-center gap-1.5 mb-8">
-                    {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
-                      <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-2xl md:text-3xl font-display text-gray-800 mb-10 leading-relaxed italic">
-                    "{testimonials[currentTestimonial].text}"
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-auto md:h-[900px]">
+            {/* Main Featured Category */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="md:col-span-7 md:row-span-2 relative group overflow-hidden"
+            >
+              <Link to="/products?category=wedding" className="block w-full h-full relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=2069&auto=format&fit=crop" 
+                  className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-[2500ms] ease-out group-hover:scale-105" 
+                  alt="Wedding Atelier" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent p-12 flex flex-col justify-end">
+                  <span className="text-white/60 text-[9px] uppercase tracking-[0.4em] mb-4">The Ceremony</span>
+                  <h3 className="font-serif text-4xl md:text-5xl text-white mb-4">The Wedding Atelier</h3>
+                  <p className="text-white/40 text-sm font-light max-w-sm mb-8 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-700">
+                    Timeless treasures crafted for the most sacred of vows. Discover high-jewelry and artisanal keepsakes.
                   </p>
-                  <div className="space-y-1">
-                    <div className="text-xl font-bold text-gray-900">{testimonials[currentTestimonial].name}</div>
-                    <div className="text-sm font-semibold text-primary uppercase tracking-[0.2em]">{testimonials[currentTestimonial].role}</div>
+                  <div className="w-10 h-10 border border-white/20 flex items-center justify-center group-hover:w-full group-hover:bg-white group-hover:text-amber-900 transition-all duration-700">
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
                   </div>
-                </motion.div>
-              </AnimatePresence>
+                </div>
+              </Link>
+            </motion.div>
 
-              <div className="flex justify-center gap-3 mt-10">
-                {testimonials.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentTestimonial(index)}
-                    className={`h-2.5 rounded-full transition-all duration-300 ${
-                      index === currentTestimonial ? 'w-10 bg-primary' : 'w-2.5 bg-gray-300 hover:bg-gray-400'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+            {/* Top Right Category */}
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="md:col-span-5 md:row-span-1 relative group overflow-hidden"
+            >
+              <Link to="/products?category=jewelry" className="block w-full h-full relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=2000&auto=format&fit=crop" 
+                  className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110" 
+                  alt="Jewelry" 
+                />
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-700 p-10 flex flex-col justify-center items-center text-center">
+                  <h3 className="font-serif text-3xl text-white mb-4 tracking-tight">The Jewelry Vault</h3>
+                  <div className="h-[1px] w-0 group-hover:w-20 bg-amber-400 transition-all duration-700 mx-auto mb-4" />
+                  <span className="text-white/80 text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Bespoke Ornaments</span>
+                </div>
+              </Link>
+            </motion.div>
+
+            {/* Bottom Middle Category */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="md:col-span-5 md:row-span-1 relative group overflow-hidden"
+            >
+              <Link to="/products?category=hampers" className="block w-full h-full relative">
+                <div className="absolute inset-0 bg-[#0a0a0a]/10 group-hover:bg-transparent transition-all z-10" />
+                <img 
+                  src="https://images.unsplash.com/photo-1522673607200-164483ee3540?q=80&w=2000&auto=format&fit=crop" 
+                  className="w-full h-full object-cover transition-transform duration-[3000ms] scale-110 group-hover:scale-100" 
+                  alt="Gourmet" 
+                />
+                <div className="absolute bottom-10 left-10 z-20">
+                   <h3 className="font-serif text-3xl text-white mb-2 drop-shadow-lg">Gourmet Haven</h3>
+                   <span className="text-amber-400 text-[10px] uppercase tracking-[0.2em] font-bold">Artisanal Tastes</span>
+                </div>
+              </Link>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-gradient-to-r from-amber-500 to-amber-600">
-        <div className="app-container text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Subscribe to Our Newsletter
-          </h2>
-          <p className="text-white/80 mb-8 max-w-2xl mx-auto">
-            Get the latest updates on new products and upcoming sales. No spam, just the good stuff.
-          </p>
-          <form className="flex flex-col sm:flex-row gap-3 sm:gap-4 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 h-12 px-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-base"
-            />
-            <Button size="lg" variant="secondary" className="whitespace-nowrap">
-              Subscribe
-            </Button>
-          </form>
+      {/* ═══════════ 5. GIFT GUIDE BY PRICE (New Layout) ═══════════ */}
+      <section className="py-24 bg-white border-y border-gray-100">
+         <div className="max-w-[1400px] mx-auto px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-12">
+               {priceGuides.map((guide, i) => (
+                 <Link key={i} to={guide.href} className="flex items-center justify-between p-8 border border-gray-100 hover:border-amber-900 transition-all group">
+                    <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500 group-hover:text-amber-900">{guide.label}</span>
+                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-amber-900 group-hover:translate-x-1 transition-all" />
+                 </Link>
+               ))}
+            </div>
+         </div>
+      </section>
+
+      {/* ═══════════ 6. THE BESTSELLERS ═══════════ */}
+      <section className="py-24 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 text-center">
+          <div className="mb-20">
+            <span className="text-amber-800 text-[10px] uppercase tracking-[0.4em] font-bold mb-4 block">Our most appreciated gifts</span>
+            <h2 className="font-serif text-5xl text-gray-900 tracking-tight">Most Loved Pieces</h2>
+          </div>
+
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
+              {bestsellers.map((product, i) => (
+                <ProductCard key={product.uid || product.id} product={product} wishlistItems={wishlistItems} onWishlistToggle={handleWishlistToggle} />
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* ═══════════ 7. PERSONALIZATION BANNER (Editorial) ═══════════ */}
+      <section className="py-24 bg-amber-900 text-white">
+         <div className="max-w-[1400px] mx-auto px-6">
+            <div className="flex flex-col lg:flex-row gap-20 items-center">
+               <div className="lg:w-1/2">
+                  <span className="text-amber-600 text-[10px] uppercase tracking-[0.4em] font-bold mb-8 block">The Atelier Experience</span>
+                  <h2 className="font-serif text-5xl md:text-7xl leading-tight mb-8">Personalized <br/><span className="italic font-light">to Perfection</span></h2>
+                  <p className="text-white/40 text-lg font-light leading-relaxed mb-12 max-w-lg">Add a unique touch to your gifts with our hand-engraving and bespoke monogramming services. Every piece tells a personal story.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12">
+                     <div className="flex gap-4 items-start">
+                        <Palette className="w-5 h-5 text-amber-600 shrink-0" strokeWidth={1.5} />
+                        <div>
+                           <h4 className="font-bold text-xs uppercase tracking-widest mb-2">Engraving</h4>
+                           <p className="text-white/30 text-xs">Laser precision for jewelry & glass.</p>
+                        </div>
+                     </div>
+                     <div className="flex gap-4 items-start">
+                        <Camera className="w-5 h-5 text-amber-600 shrink-0" strokeWidth={1.5} />
+                        <div>
+                           <h4 className="font-bold text-xs uppercase tracking-widest mb-2">Photo Gifts</h4>
+                           <p className="text-white/30 text-xs">Print high-fidelity memories.</p>
+                        </div>
+                     </div>
+                  </div>
+                  <Link to="/products?customizable=true">
+                     <Button className="bg-white text-amber-900 hover:bg-amber-800 hover:text-white rounded-none h-14 px-12 text-[10px] uppercase tracking-[0.3em] font-bold">Personalize Now</Button>
+                  </Link>
+               </div>
+               <div className="lg:w-1/2 relative">
+                  <div className="aspect-square grayscale hover:grayscale-0 transition-all duration-1000 overflow-hidden">
+                     <img src="https://images.unsplash.com/photo-1549461051-7b7072551ec4?q=80&w=2000&auto=format&fit=crop" className="w-full h-full object-cover" alt="Personalization" />
+                  </div>
+                  <div className="absolute top-10 right-10 p-10 bg-white/5 backdrop-blur-xl border border-white/10 hidden md:block">
+                     <Layers className="w-8 h-8 text-amber-600 mb-4" />
+                     <p className="text-[10px] uppercase tracking-[0.2em] font-bold">100+ Motifs Available</p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      {/* ═══════════ 8. INFINITE PRODUCT FEED (Infinity Scroll) ═══════════ */}
+      <section className="py-24 bg-white">
+         <div className="max-w-[1400px] mx-auto px-6">
+            <div className="mb-20 text-center">
+               <h2 className="font-serif text-4xl text-gray-900 mb-4">Discover More</h2>
+               <div className="w-10 h-[1px] bg-amber-900 mx-auto" />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
+               {feedProducts.map((product, i) => (
+                 <motion.div 
+                   key={product.id + '-' + i}
+                   initial={{ opacity: 0, y: 10 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true }}
+                 >
+                    <ProductCard product={product} wishlistItems={wishlistItems} onWishlistToggle={handleWishlistToggle} />
+                 </motion.div>
+               ))}
+               
+               {/* Skeletons while loading more */}
+               {isPageLoading && [...Array(4)].map((_, i) => (
+                 <div key={i} className="animate-pulse">
+                    <div className="aspect-[4/5] bg-gray-100 mb-6" />
+                    <div className="h-4 bg-gray-100 w-3/4 mx-auto mb-2" />
+                    <div className="h-4 bg-gray-100 w-1/4 mx-auto" />
+                 </div>
+               ))}
+            </div>
+
+            {/* Intersection Observer Target */}
+            <div ref={observerTarget} className="h-20 w-full flex items-center justify-center mt-10">
+               {!hasMore && <p className="text-gray-400 font-light italic">You have curated our entire collection.</p>}
+            </div>
+         </div>
+      </section>
+
+      {/* ═══════════ 9. THE BOUTIQUE STANDARDS ═══════════ */}
+      <section className="py-24 bg-[#faf9f6] border-y border-gray-100">
+        <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-16">
+          <div className="flex flex-col items-center text-center group">
+            <div className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center mb-6 group-hover:bg-white transition-colors text-gray-400 group-hover:text-amber-900">
+              <Truck className="w-5 h-5" strokeWidth={1} />
+            </div>
+            <h4 className="font-bold text-[10px] uppercase tracking-widest mb-3">The Boutique Standards</h4>
+            <p className="text-gray-500 text-sm font-light leading-relaxed max-w-xs">Complimentary shipping on all curated orders exceeding $200.</p>
+          </div>
+          <div className="flex flex-col items-center text-center group">
+            <div className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center mb-6 group-hover:bg-white transition-colors text-gray-400 group-hover:text-amber-900">
+              <Shield className="w-5 h-5" strokeWidth={1} />
+            </div>
+            <h4 className="font-bold text-[10px] uppercase tracking-widest mb-3">Certified Quality</h4>
+            <p className="text-gray-500 text-sm font-light leading-relaxed max-w-xs">Every treasure is verified for authenticity and artisanal excellence.</p>
+          </div>
+          <div className="flex flex-col items-center text-center group">
+            <div className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center mb-6 group-hover:bg-white transition-colors text-gray-400 group-hover:text-amber-900">
+              <RotateCcw className="w-5 h-5" strokeWidth={1} />
+            </div>
+            <h4 className="font-bold text-[10px] uppercase tracking-widest mb-3">Seamless Assistance</h4>
+            <p className="text-gray-500 text-sm font-light leading-relaxed max-w-xs">Our concierge is available 24/7 for effortless exchanges and returns.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════ 10. CLEAN NEWSLETTER ═══════════ */}
+      <section className="py-40 bg-amber-950 text-white text-center">
+        <div className="max-w-3xl mx-auto px-6">
+          <Gem className="w-12 h-12 text-amber-600 mx-auto mb-10 opacity-40" strokeWidth={1} />
+          <h2 className="font-serif text-6xl mb-8 tracking-tight">The Elite Gifting Circle</h2>
+          <p className="text-gray-400 text-xl font-light mb-16 max-w-2xl mx-auto">Exclusive access to private reveals, artisanal premieres, and festive curators.</p>
+           <form 
+              className="flex flex-col sm:flex-row gap-4 border-b border-white/20 pb-4"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (emailValue.trim()) {
+                  dispatch(addToast({ type: 'success', title: 'Welcome', message: 'You have joined the Elite Gifting Circle.' }))
+                  setEmailValue('')
+                }
+              }}
+           >
+              <input 
+                type="email" 
+                placeholder="Indicate your email address" 
+                value={emailValue}
+                onChange={(e) => setEmailValue(e.target.value)}
+                className="flex-1 bg-transparent text-white placeholder:text-gray-500 outline-none px-6 py-4 tracking-widest text-lg font-light"
+                required
+              />
+              <button type="submit" className="text-[12px] uppercase tracking-[0.4em] font-extrabold text-amber-600 hover:text-white transition-all px-10 py-4">
+                 Join
+              </button>
+           </form>
         </div>
       </section>
     </div>
   )
 }
 
+/* ═══════════ PRODUCT CARD COMPONENT (Classical) ═══════════ */
+
+function ProductCard({
+  product,
+  wishlistItems,
+  onWishlistToggle,
+}: {
+  product?: Product
+  wishlistItems: Product[]
+  onWishlistToggle: (product: Product, e: React.MouseEvent) => void
+}) {
+  if (!product) {
+    return (
+      <div className="flex flex-col h-full animate-pulse">
+        <div className="aspect-[4/5] bg-gray-100 mb-6" />
+        <div className="h-4 bg-gray-100 rounded w-3/4 mb-4 mx-auto" />
+      </div>
+    )
+  }
+
+  const isWished = wishlistItems.some((w) => w.id === (product.uid || product.id))
+  const imageUrl = product.image_url || product.images?.[0] || 'https://images.unsplash.com/photo-1549464104-bb22ca201532?q=80&w=2000&auto=format&fit=crop'
+
+  return (
+    <div className="group flex flex-col">
+      <div className="aspect-[4/5] bg-[#f0f0f0] overflow-hidden relative mb-6">
+        <Link to={`/products/${product.uid || product.id}`}>
+          <img 
+            src={imageUrl} 
+            alt={product.name} 
+            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1549464104-bb22ca201532?q=80&w=2000&auto=format&fit=crop'
+            }}
+          />
+        </Link>
+        <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+          <button 
+            className="w-10 h-10 rounded-full bg-white/80 backdrop-blur opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all hover:bg-white text-gray-600 shadow-xl" 
+            onClick={(e) => onWishlistToggle(product, e)}
+          >
+            <Heart className={cn("w-4 h-4 transition-colors", isWished ? "fill-amber-900 text-amber-900 border-none" : "border-none")} />
+          </button>
+        </div>
+        {product.originalPrice && (
+          <div className="absolute top-4 left-4 bg-red-700 text-white text-[10px] uppercase tracking-widest px-4 py-1.5 font-bold">
+            Sales
+          </div>
+        )}
+      </div>
+      
+      <div className="text-center px-4">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-semibold mb-2">{product.brand || 'Atelier'}</p>
+        <Link to={`/products/${product.uid || product.id}`}>
+          <h3 className="font-serif text-xl text-gray-900 line-clamp-1 hover:text-amber-900 transition-colors mb-3 leading-tight">{product.name}</h3>
+        </Link>
+        <div className="flex justify-center items-center gap-4">
+          <span className="font-light text-gray-900 text-lg">{formatPrice(product.price)}</span>
+          {product.originalPrice && <span className="text-sm font-light text-gray-400 line-through">{formatPrice(product.originalPrice)}</span>}
+        </div>
+      </div>
+    </div>
+  )
+}

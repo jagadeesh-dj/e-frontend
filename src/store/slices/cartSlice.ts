@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { Cart, CartItem, Product, ProductVariant } from '../../types'
 import api from '../../services/api'
 import { handleApiError, handleApiSuccess } from '../../utils/apiErrorHandler'
+import { mapProduct } from './productSlice'
 
 interface CouponResult {
   code: string
@@ -27,10 +28,26 @@ const initialState: CartState = {
   error: null,
 }
 
+// Utility to map cart items and their products
+function mapCart(cart: any): Cart {
+  if (!cart) return cart
+  const items = (cart.items || []).map((item: any) => ({
+    ...item,
+    id: String(item.id),
+    product_uid: item.product_uid || item.product?.uid,
+    product: item.product ? mapProduct(item.product) : undefined,
+  }))
+  return {
+    ...cart,
+    id: String(cart.id),
+    items,
+  }
+}
+
 export const fetchCart = createAsyncThunk<Cart>('cart/fetchCart', async (_, { dispatch, rejectWithValue }) => {
   try {
     const response = await api.get<{ success: boolean; message: string; data: Cart }>('/cart')
-    return response.data.data
+    return mapCart(response.data.data)
   } catch (error: any) {
     const message = handleApiError(error, dispatch, 'Failed to fetch cart')
     return rejectWithValue(message)
@@ -39,17 +56,16 @@ export const fetchCart = createAsyncThunk<Cart>('cart/fetchCart', async (_, { di
 
 export const addToCart = createAsyncThunk<
   Cart,
-  { productId: string; quantity: number; variantId?: string }
->('cart/addToCart', async ({ productId, quantity, variantId }, { dispatch, rejectWithValue }) => {
+  { productUid: string; quantity: number; variantUid?: string }
+>('cart/addToCart', async ({ productUid, quantity, variantUid }, { dispatch, rejectWithValue }) => {
   try {
-    // Backend expects snake_case fields: product_id, quantity, variant_id
     const response = await api.post<{ success: boolean; message: string; data: Cart }>('/cart/items', {
-      product_id: parseInt(productId, 10),
+      product_uid: productUid,
       quantity,
-      ...(variantId ? { variant_id: parseInt(variantId, 10) } : {}),
+      ...(variantUid ? { variant_uid: variantUid } : {}),
     })
     handleApiSuccess(dispatch, 'Added to cart', 'Item added successfully')
-    return response.data.data
+    return mapCart(response.data.data)
   } catch (error: any) {
     const message = handleApiError(error, dispatch, 'Failed to add item to cart')
     return rejectWithValue(message)
@@ -58,14 +74,14 @@ export const addToCart = createAsyncThunk<
 
 export const updateCartItem = createAsyncThunk<
   Cart,
-  { itemId: string; quantity: number }
->('cart/updateCartItem', async ({ itemId, quantity }, { dispatch, rejectWithValue }) => {
+  { itemUid: string; quantity: number }
+>('cart/updateCartItem', async ({ itemUid, quantity }, { dispatch, rejectWithValue }) => {
   try {
     const response = await api.put<{ success: boolean; message: string; data: Cart }>(
-      `/cart/items/${itemId}`,
+      `/cart/items/uid/${itemUid}`,
       { quantity }
     )
-    return response.data.data
+    return mapCart(response.data.data)
   } catch (error: any) {
     const message = handleApiError(error, dispatch, 'Failed to update cart item')
     return rejectWithValue(message)
@@ -74,13 +90,12 @@ export const updateCartItem = createAsyncThunk<
 
 export const removeCartItem = createAsyncThunk<Cart, string>(
   'cart/removeCartItem',
-  async (itemId, { dispatch, rejectWithValue }) => {
+  async (itemUid, { dispatch, rejectWithValue }) => {
     try {
-      // Cart DELETE returns 204 no content; refetch cart after removal
-      await api.delete(`/cart/items/${itemId}`)
+      await api.delete(`/cart/items/uid/${itemUid}`)
       handleApiSuccess(dispatch, 'Removed from cart', 'Item removed successfully')
       const response = await api.get<{ success: boolean; message: string; data: Cart }>('/cart')
-      return response.data.data
+      return mapCart(response.data.data)
     } catch (error: any) {
       const message = handleApiError(error, dispatch, 'Failed to remove cart item')
       return rejectWithValue(message)
@@ -134,6 +149,7 @@ const cartSlice = createSlice({
         const newItem: CartItem = {
           id: `temp-${Date.now()}`,
           product_id: action.payload.product.id,
+          product_uid: action.payload.product.uid,
           product: action.payload.product,
           quantity: action.payload.quantity,
           price: action.payload.product.price,

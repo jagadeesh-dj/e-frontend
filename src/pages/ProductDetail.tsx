@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ShoppingCart, Heart, Star, Truck, Shield, RotateCcw, Check, Minus, Plus, Send, Palette } from 'lucide-react'
+import { ArrowLeft, ShoppingBag, Heart, Star, Truck, Shield, RotateCcw, Check, Minus, Plus, Gem, Palette } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
-import { formatPrice } from '../lib/utils'
+import { formatPrice, cn } from '../lib/utils'
 import { Product } from '../types'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice'
@@ -17,36 +17,29 @@ import { fetchProductById } from '../store/slices/productSlice'
 import { addToast } from '../store/slices/uiSlice'
 
 export default function ProductDetail() {
-  const { id } = useParams<{ id: string }>()
+  const { uid } = useParams<{ uid: string }>()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { items: wishlistItems } = useAppSelector((state) => state.wishlist)
   const { user } = useAppSelector((state) => state.auth)
-  const { currentProduct: product, products, isLoading, error } = useAppSelector((state) => state.products)
+  const { currentProduct: product, products, isLoading } = useAppSelector((state) => state.products)
+
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
   const [added, setAdded] = useState(false)
-  const [activeTab, setActiveTab] = useState<'description' | 'reviews' | 'shipping'>('description')
+  const [activeTab, setActiveTab] = useState<'description' | 'details' | 'shipping'>('description')
   const [isWishlisted, setIsWishlisted] = useState(false)
-  const [reviewRating, setReviewRating] = useState(5)
-  const [reviewTitle, setReviewTitle] = useState('')
-  const [reviewComment, setReviewComment] = useState('')
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false)
-  const [reviews, setReviews] = useState<any[]>([])
+
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
 
-  const isInWishlist = wishlistItems.some(item => item.id === product?.id)
+  const isInWishlist = wishlistItems.some(item => item.id === (product?.uid || product?.id))
 
   useEffect(() => {
-    if (id) {
-      dispatch(fetchProductById(id))
-      api.get(`/reviews/product/${id}`).then(res => {
-        const items = res.data?.data?.items || res.data?.items || []
-        setReviews(Array.isArray(items) ? items : [])
-      }).catch(e => console.error(e))
+    if (uid) {
+      dispatch(fetchProductById(uid))
     }
-  }, [id, dispatch])
+  }, [uid, dispatch])
 
   useEffect(() => {
     if (product?.variants?.length) {
@@ -60,26 +53,25 @@ export default function ProductDetail() {
   }, [product])
 
   useEffect(() => {
-    setIsWishlisted(wishlistItems.some(item => item.id === id))
-  }, [id, wishlistItems])
+    setIsWishlisted(wishlistItems.some(item => item.id === uid))
+  }, [uid, wishlistItems])
 
   const handleAddToCart = async () => {
     if (!product) return
     setIsAdding(true)
     try {
-      const activeVariant = product.variants?.find(v => 
+      const activeVariant = product.variants?.find(v =>
         Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
       )
-      
-      await dispatch(addToCart({ 
-        productId: product.id, 
+
+      await dispatch(addToCart({
+        productUid: product.uid || product.id,
         quantity: quantity,
-        variantId: activeVariant?.id // Add variantId to cart if selected
+        variantUid: activeVariant?.uid
       } as any)).unwrap()
       setAdded(true)
       setTimeout(() => setAdded(false), 2000)
     } catch (error) {
-      console.error('Failed to add to cart:', error)
       dispatch(addToast({ type: 'error', title: 'Failed to add item to cart' }))
     } finally {
       setIsAdding(false)
@@ -89,40 +81,17 @@ export default function ProductDetail() {
   const handleWishlistToggle = () => {
     if (!product) return
     if (isInWishlist) {
-      dispatch(removeFromWishlist(product.id))
+      dispatch(removeFromWishlist(product.uid || product.id))
     } else {
       dispatch(addToWishlist(product))
     }
   }
 
-  const handleSubmitReview = async () => {
-    if (!reviewTitle.trim() || !reviewComment.trim()) {
-      dispatch(addToast({ type: 'error', title: 'Please fill in all fields' }))
-      return
-    }
-    
-    setIsSubmittingReview(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    dispatch(addToast({ 
-      type: 'success', 
-      title: 'Review submitted successfully!',
-      message: 'Thank you for your feedback.'
-    }))
-    
-    setReviewRating(5)
-    setReviewTitle('')
-    setReviewComment('')
-    setIsSubmittingReview(false)
-  }
-
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-muted-foreground mb-4">Loading product...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#faf9f6]">
+        <div className="text-center font-serif text-2xl text-amber-900/50 animate-pulse">
+          Loading the collection...
         </div>
       </div>
     )
@@ -130,128 +99,114 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#faf9f6]">
         <div className="text-center">
-          <p className="text-lg text-muted-foreground mb-4">Product not found</p>
+          <p className="font-serif text-3xl text-gray-900 mb-6">Product not found</p>
           <Link to="/products">
-            <Button>Back to Products</Button>
+            <Button className="bg-amber-700 text-white hover:bg-amber-800 rounded-none h-12 px-8 uppercase tracking-[0.2em] text-xs">
+              Return to Gallery
+            </Button>
           </Link>
         </div>
       </div>
     )
   }
 
+  const activePrice = product.variants?.find(v => 
+    Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
+  )?.price ?? product.price
+
   const relatedProducts = products
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 4)
 
   return (
-    <div className="min-h-screen pb-20">
-      <div className="app-container py-8">
-        <Link
-          to="/products"
-          className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Products
-        </Link>
+    <div className="min-h-screen pb-20 bg-[#faf9f6]">
+      {/* Breadcrumb / Back Navigation */}
+      <div className="border-b border-gray-200/50">
+        <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-center gap-2">
+          <Link to="/products" className="text-[10px] uppercase tracking-[0.2em] text-gray-500 hover:text-amber-700 transition-colors flex items-center gap-2">
+            <ArrowLeft className="w-3 h-3" />
+            Back to Collection
+          </Link>
+          <span className="text-gray-300">/</span>
+          <span className="text-[10px] uppercase tracking-[0.2em] text-gray-900 font-semibold">{product.category}</span>
+        </div>
+      </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 mb-16">
-          <div className="space-y-3 sm:space-y-4">
+      <div className="max-w-[1400px] mx-auto px-6 py-12 lg:py-20">
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
+          
+          {/* Left Column: Imagery */}
+          <div className="flex flex-col gap-4">
             <motion.div
-              key={selectedImage}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-muted"
+              layoutId={`product-image-${product.id}`}
+              className="aspect-[4/5] overflow-hidden bg-[#f0f0f0] relative"
             >
-              <img
-                src={product.images[selectedImage]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={selectedImage}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  src={product.images[selectedImage]}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              </AnimatePresence>
             </motion.div>
-            <div className="grid grid-cols-4 gap-2 sm:gap-4">
+            
+            <div className="grid grid-cols-5 gap-4">
               {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all ${
-                    selectedImage === index ? 'border-primary' : 'border-transparent'
-                  }`}
+                  className={cn(
+                    "aspect-square overflow-hidden bg-[#f0f0f0] border",
+                    selectedImage === index ? "border-amber-700" : "border-transparent hover:border-gray-300"
+                  )}
                 >
-                  <img src={image} alt="" className="w-full h-full object-cover" />
+                  <img src={image} alt="" className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="space-y-4 sm:space-y-6">
-            <div>
-              <Badge variant="secondary" className="mb-2 sm:mb-3 text-xs sm:text-sm">{product.brand}</Badge>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">{product.name}</h1>
-              <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-5 sm:w-5 ${i < Math.floor(product.rating) ? 'fill-amber-400 text-amber-400' : 'text-muted'}`}
-                    />
-                  ))}
-                </div>
-                <span className="text-muted-foreground text-sm">
-                  {product.rating} ({product.reviewCount} reviews)
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-              <span className="text-3xl sm:text-4xl font-bold">
-                {formatPrice(
-                  product.variants?.find(v => 
-                    Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
-                  )?.price ?? product.price
-                )}
-              </span>
-              {(product.variants?.find(v => 
-                Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
-              )?.originalPrice ?? product.originalPrice) && (
-                <>
-                  <span className="text-lg sm:text-xl text-muted-foreground line-through">
-                    {formatPrice(
-                      product.variants?.find(v => 
-                        Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
-                      )?.originalPrice ?? product.originalPrice ?? 0
-                    )}
-                  </span>
-                  <Badge variant="destructive" className="text-xs sm:text-sm">
-                    {Math.round((1 - (product.variants?.find(v => 
-                      Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
-                    )?.price ?? product.price) / (product.variants?.find(v => 
-                      Object.entries(selectedAttributes).every(([key, value]) => v.attributes[key] === value)
-                    )?.originalPrice ?? product.originalPrice ?? 1)) * 100)}% OFF
-                  </Badge>
-                </>
+          {/* Right Column: Details */}
+          <div className="flex flex-col pt-4 lg:pt-10">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-amber-700 font-bold mb-4">{product.brand}</p>
+            <h1 className="font-serif text-4xl lg:text-5xl text-gray-900 leading-[1.1] mb-6">{product.name}</h1>
+            
+            <div className="flex items-end gap-4 mb-8">
+              <span className="text-3xl font-light text-gray-900">{formatPrice(activePrice)}</span>
+              {product.originalPrice && (
+                <span className="text-lg text-gray-400 line-through mb-1">{formatPrice(product.originalPrice)}</span>
               )}
             </div>
 
-            <p className="text-muted-foreground text-sm sm:text-base">{product.description}</p>
+            <p className="text-sm font-light leading-relaxed text-gray-600 mb-10 max-w-lg">
+              {product.description}
+            </p>
 
+            {/* Variants */}
             {product.variants && product.variants.length > 0 && (
-              <div className="space-y-4 py-2">
+              <div className="space-y-6 mb-10 pb-10 border-b border-gray-200/50">
                 {Array.from(new Set(product.variants.flatMap(v => Object.keys(v.attributes)))).map(key => (
-                  <div key={key} className="space-y-2">
-                    <label className="text-sm font-semibold capitalize">{key}:</label>
-                    <div className="flex flex-wrap gap-2">
+                  <div key={key} className="space-y-3">
+                    <label className="text-[10px] uppercase tracking-[0.15em] font-semibold text-gray-900">{key}</label>
+                    <div className="flex flex-wrap gap-3">
                       {Array.from(new Set(product.variants!.map(v => v.attributes[key]))).map(value => (
                         <button
                           key={value}
                           onClick={() => setSelectedAttributes(prev => ({ ...prev, [key]: value }))}
-                          className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
-                            selectedAttributes[key] === value
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-muted hover:border-primary/50'
-                          }`}
-                        >
+                           className={cn(
+                             "px-6 py-3 text-xs tracking-wider transition-all border",
+                             selectedAttributes[key] === value
+                               ? 'border-amber-700 bg-amber-700 text-white'
+                               : 'border-gray-200 text-gray-600 hover:border-amber-700'
+                           )}
+                         >
                           {value}
                         </button>
                       ))}
@@ -261,330 +216,136 @@ export default function ProductDetail() {
               </div>
             )}
 
-            <div className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-muted/30 rounded-xl overflow-x-auto">
-              <div className="flex items-center gap-2 min-w-fit">
-                <Truck className="w-4 h-5 sm:w-5 text-primary" />
-                <span className="text-xs sm:text-sm whitespace-nowrap">Free Shipping</span>
-              </div>
-              <div className="flex items-center gap-2 min-w-fit">
-                <Shield className="w-4 h-5 sm:w-5 text-primary" />
-                <span className="text-xs sm:text-sm whitespace-nowrap">Secure Payment</span>
-              </div>
-              <div className="flex items-center gap-2 min-w-fit">
-                <RotateCcw className="w-4 h-5 sm:w-5 text-primary" />
-                <span className="text-xs sm:text-sm whitespace-nowrap">30-Day Returns</span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">Availability:</span>
-                <span className={product.stock > 10 ? 'text-green-500' : product.stock > 0 ? 'text-amber-500' : 'text-red-500'}>
-                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-                </span>
-              </div>
-
-              <div>
-                <label className="font-medium mb-2 block">Quantity</label>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center border rounded-xl">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <span className="w-12 text-center font-medium">{quantity}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
+            {/* Actions */}
+            <div className="space-y-6 pb-12">
+              <div className="flex items-end gap-6">
+                <div className="flex-shrink-0">
+                  <label className="text-[10px] uppercase tracking-[0.15em] font-semibold text-gray-900 block mb-3">Quantity</label>
+                  <div className="flex items-center border border-gray-200 h-14 w-32">
+                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="flex-1 flex items-center justify-center text-gray-500 hover:text-gray-900"><Minus className="w-4 h-4" /></button>
+                    <span className="flex-1 text-center font-light text-sm">{quantity}</span>
+                    <button onClick={() => setQuantity(Math.min(product.stock, quantity + 1))} className="flex-1 flex items-center justify-center text-gray-500 hover:text-gray-900"><Plus className="w-4 h-4" /></button>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex gap-3">
-                {(product as any).is_customizable ? (
-                  <Button
-                    size="xl"
-                    className="flex-1 gap-2"
-                    variant="secondary"
-                    onClick={() => navigate(`/customize/${product.id}`)}
-                  >
-                    <Palette className="w-5 h-5" />
-                    Customize Now
-                  </Button>
-                ) : (
-                  <Button
-                    size="xl"
-                    className="flex-1"
-                    onClick={handleAddToCart}
-                    loading={isAdding}
-                    disabled={product.stock === 0}
-                  >
-                    {added ? (
-                      <>
-                        <Check className="w-5 h-5 mr-2" />
-                        Added to Cart
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-5 h-5 mr-2" />
-                        Add to Cart
-                      </>
-                    )}
-                  </Button>
-                )}
-                <Button variant="outline" size="xl" onClick={handleWishlistToggle}>
-                  {isInWishlist ? (
-                    <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                  ) : (
-                    <Heart className="w-5 h-5" />
-                  )}
-                </Button>
+                 <div className="flex-1 flex gap-4">
+                   {(product as any).is_customizable ? (
+                     <Button
+                       className="flex-1 h-14 bg-amber-700 hover:bg-amber-800 text-white text-xs uppercase tracking-[0.2em] rounded-none transition-colors"
+                       onClick={() => navigate(`/customize/${product.uid}`)}
+                     >
+                       <Palette className="w-4 h-4 mr-3" />
+                       Personalize
+                     </Button>
+                   ) : (
+                     <Button
+                       className="flex-1 h-14 bg-amber-700 hover:bg-amber-800 text-white text-xs uppercase tracking-[0.2em] rounded-none transition-colors"
+                       onClick={handleAddToCart}
+                       disabled={product.stock === 0 || isAdding}
+                     >
+                       {added ? 'Added to Bag' : 'Add to Bag'}
+                     </Button>
+                   )}
+                   
+                   <button 
+                     onClick={handleWishlistToggle}
+                     className="w-14 h-14 flex items-center justify-center border border-gray-200 hover:border-amber-700 transition-colors"
+                   >
+                     <Heart className={cn("w-5 h-5 transition-colors", isInWishlist ? "fill-amber-700 text-amber-700" : "text-gray-900")} />
+                   </button>
+                 </div>
               </div>
-
-              {(product as any).is_customizable && (
-                <div className="pt-4">
-                  <Button
-                    size="xl"
-                    className="w-full"
-                    onClick={handleAddToCart}
-                    loading={isAdding}
-                    disabled={product.stock === 0}
-                  >
-                    {added ? (
-                      <>
-                        <Check className="w-5 h-5 mr-2" />
-                        Added to Cart
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-5 h-5 mr-2" />
-                        Add to Cart
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
+              
+              <div className="flex items-center gap-2 text-xs text-amber-700 font-medium">
+                <div className={cn("w-2 h-2 rounded-full", product.stock > 10 ? "bg-green-500" : product.stock > 0 ? "bg-amber-500" : "bg-red-500")} />
+                {product.stock > 0 ? 'Item in Stock and Ready to Ship' : 'Currently Unavailable'}
+              </div>
             </div>
 
-            {product.features && (
-              <div className="pt-6 border-t">
-                <h3 className="font-semibold mb-3">Key Features</h3>
-                <ul className="space-y-2">
-                  {product.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      <Check className="w-4 h-4 text-green-500" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+            {/* Accordion / Info */}
+            <div className="border-t border-gray-200/50 pt-8 mt-auto">
+              <div className="flex items-center gap-12 border-b border-gray-200/50 mb-8 pb-4">
+                 {(['description', 'details', 'shipping'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      "text-[10px] uppercase tracking-[0.2em] pb-4 -mb-[17px] transition-colors relative",
+                      activeTab === tab ? "text-gray-900 font-bold border-b-2 border-amber-700" : "text-gray-400 hover:text-gray-900"
+                    )}
+                  >
+                    {tab}
+                  </button>
+                 ))}
               </div>
-            )}
-          </div>
-        </div>
 
-        <div className="mb-12 sm:mb-16">
-          <div className="flex gap-2 sm:gap-4 border-b mb-6 sm:mb-8 overflow-x-auto">
-            {(['description', 'reviews', 'shipping'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3 sm:px-4 py-2 sm:py-3 font-medium capitalize transition-colors relative whitespace-nowrap ${
-                  activeTab === tab ? 'text-primary' : 'text-muted-foreground'
-                }`}
-              >
-                {tab}
-                {activeTab === tab && (
-                  <motion.div
-                    layoutId="tab-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                  />
+              <div className="min-h-[150px] text-sm font-light leading-relaxed text-gray-600">
+                {activeTab === 'description' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    {product.description}
+                  </motion.div>
                 )}
-              </button>
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            {activeTab === 'description' && (
-              <motion.div
-                key="description"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <p className="text-muted-foreground leading-relaxed">{product.description}</p>
-              </motion.div>
-            )}
-            {activeTab === 'reviews' && (
-              <motion.div
-                key="reviews"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-6"
-              >
-                {user && (
-                  <Card className="p-6">
-                    <h3 className="font-semibold mb-4">Write a Review</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Rating</label>
-                        <div className="flex gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              onClick={() => setReviewRating(star)}
-                              className="p-1 transition-transform hover:scale-110"
-                            >
-                              <Star
-                                className={`w-6 h-6 ${
-                                  star <= reviewRating
-                                    ? 'fill-amber-400 text-amber-400'
-                                    : 'text-muted hover:text-amber-300'
-                                }`}
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Title</label>
-                        <Input
-                          placeholder="Summarize your review"
-                          value={reviewTitle}
-                          onChange={(e) => setReviewTitle(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">Your Review</label>
-                        <Textarea
-                          placeholder="Share your experience with this product..."
-                          value={reviewComment}
-                          onChange={(e) => setReviewComment(e.target.value)}
-                          rows={4}
-                        />
-                      </div>
-                      <Button
-                        onClick={handleSubmitReview}
-                        disabled={isSubmittingReview}
-                        className="w-full"
-                      >
-                        {isSubmittingReview ? (
-                          <>
-                            <span className="animate-pulse">Submitting...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Send className="w-4 h-4 mr-2" />
-                            Submit Review
-                          </>
-                        )}
-                      </Button>
+                {activeTab === 'details' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-y-4 max-w-md">
+                      <div className="text-gray-900 font-medium">Brand</div>
+                      <div>{product.brand || 'Premium Collection'}</div>
+                      <div className="text-gray-900 font-medium">SKU</div>
+                      <div>{product.id.substring(0,8).toUpperCase()}</div>
                     </div>
-                  </Card>
+                  </motion.div>
                 )}
-
-                {reviews.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">No reviews yet. Be the first to review!</div>
-                ) : (
-                  reviews.slice(0, 5).map((review) => (
-                    <Card key={review.id} className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <div className="font-medium">{review.user?.first_name || 'Anonymous User'}</div>
-                          <div className="flex items-center gap-1 mt-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-muted'}`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(review.created_at || review.createdAt).toLocaleDateString()}
-                        </span>
+                {activeTab === 'shipping' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                    <div className="flex items-start gap-4">
+                      <Truck className="w-5 h-5 text-amber-700 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h4 className="text-gray-900 font-medium mb-1">Complimentary Delivery</h4>
+                        <p>Receive free standard shipping on all orders above $100.</p>
                       </div>
-                      <h4 className="font-semibold mb-2">{review.title}</h4>
-                      <p className="text-muted-foreground">{review.comment}</p>
-                    </Card>
-                  ))
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <RotateCcw className="w-5 h-5 text-amber-700 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h4 className="text-gray-900 font-medium mb-1">Effortless Returns</h4>
+                        <p>Enjoy a complimentary 30-day return policy for all pristine items.</p>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
-              </motion.div>
-            )}
-            {activeTab === 'shipping' && (
-              <motion.div
-                key="shipping"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"
-              >
-                <Card className="p-4 sm:p-6">
-                  <Truck className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-3 sm:mb-4" />
-                  <h4 className="font-semibold mb-2">Free Shipping</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Free standard shipping on orders over $50. Express options available at checkout.
-                  </p>
-                </Card>
-                <Card className="p-4 sm:p-6">
-                  <RotateCcw className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-3 sm:mb-4" />
-                  <h4 className="font-semibold mb-2">Easy Returns</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Not satisfied? Return any item within 30 days for a full refund.
-                  </p>
-                </Card>
-                <Card className="p-4 sm:p-6">
-                  <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-3 sm:mb-4" />
-                  <h4 className="font-semibold mb-2">Secure Payment</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Your payment information is encrypted and secure with SSL technology.
-                  </p>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </div>
+
+          </div>
         </div>
 
+        {/* ═══════════ RELATED PRODUCTS ═══════════ */}
         {relatedProducts.length > 0 && (
-          <section>
-            <h2 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Related Products</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-              {relatedProducts.map((product) => (
-                <Link key={product.id} to={`/products/${product.id}`}>
-                  <Card hover className="overflow-hidden group">
-                    <div className="aspect-square overflow-hidden">
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold line-clamp-1">{product.name}</h3>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="font-bold">{formatPrice(product.price)}</span>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                          <span className="text-sm">{product.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
+          <div className="mt-32 pt-20 border-t border-gray-200/50">
+            <div className="text-center mb-16">
+              <h2 className="font-serif text-3xl text-gray-900 mb-4">You May Also Desire</h2>
+              <div className="w-10 h-[1px] bg-amber-700 mx-auto" />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {relatedProducts.map((p) => (
+                <Link key={p.id} to={`/products/${p.uid}`} className="group block">
+                  <div className="aspect-[3/4] overflow-hidden bg-[#f0f0f0] mb-5">
+                    <img
+                      src={p.images[0]}
+                      alt={p.name}
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                    />
+                  </div>
+                  <h3 className="font-serif text-lg text-gray-900 mb-2 group-hover:text-amber-700 transition-colors">{p.name}</h3>
+                  <p className="text-sm font-light">{formatPrice(p.price)}</p>
                 </Link>
               ))}
             </div>
-          </section>
+          </div>
         )}
+
       </div>
     </div>
   )
 }
-
-

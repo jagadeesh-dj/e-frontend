@@ -5,6 +5,7 @@ import { handleApiError } from '../../utils/apiErrorHandler'
 
 interface BackendProduct {
   id: number
+  uid: string
   name: string
   slug: string
   description?: string
@@ -39,6 +40,7 @@ interface BackendProduct {
 export function mapProduct(p: BackendProduct): Product {
   return {
     id: String(p.id),
+    uid: p.uid,
     name: p.name,
     description: p.description || p.short_desc || '',
     price: p.sale_price ?? p.base_price,
@@ -54,8 +56,9 @@ export function mapProduct(p: BackendProduct): Product {
     stock: p.stock ?? 0,
     is_active: p.is_active,
     is_customizable: p.is_customizable,
-    variants: p.variants?.map((v) => ({
+    variants: p.variants?.map((v: any) => ({
       id: String(v.id),
+      uid: v.uid,
       product_id: String(v.product_id),
       sku: v.sku,
       attributes: v.attributes,
@@ -179,10 +182,10 @@ export const fetchCategories = createAsyncThunk<Category[]>(
 
 export const fetchProductById = createAsyncThunk<Product, string>(
   'products/fetchProductById',
-  async (slugOrId, { dispatch, rejectWithValue }) => {
+  async (uid, { dispatch, rejectWithValue }) => {
     try {
       const response = await api.get<{ success: boolean; data: BackendProduct }>(
-        `/products/${slugOrId}`
+        `/products/uid/${uid}`
       )
       return mapProduct(response.data.data)
     } catch (error: any) {

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin,
-  Heart, Shield, Truck, Award, CreditCard, Globe
+  Heart, Shield, Truck, Award, CreditCard, Globe, ArrowUpRight
 } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -51,78 +51,78 @@ const footerLinks = {
 }
 
 const features = [
-  { icon: Truck, text: 'Same Day Delivery' },
-  { icon: Shield, text: 'Secure Payment' },
-  { icon: Award, text: 'Quality Guaranteed' },
-  { icon: Heart, text: '24/7 Support' },
+  { icon: Truck, title: 'Same Day Delivery', desc: 'Across 400+ Cities' },
+  { icon: Shield, title: 'Secure Payment', desc: '100% Safe Transitions' },
+  { icon: Award, title: 'Quality Guaranteed', desc: 'Freshness & Excellence' },
+  { icon: Heart, title: '24/7 Support', desc: 'We are here to help' },
 ]
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-[#001433] text-gray-300">
-      {/* Customer Support Bar */}
-      <div className="bg-gradient-to-r from-primary-800 to-primary-900 border-b border-primary-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5 text-primary-400" />
-                <span className="font-semibold text-white">+91 (555) 123-4567</span>
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <Mail className="w-5 h-5 text-primary-400" />
-                <span>support@shopeverse.com</span>
-              </div>
+    <footer className="bg-white border-t border-gray-100 mt-20">
+      {/* Newsletter Section - Premium Integration */}
+      <div className="bg-amber-50/50 border-b border-amber-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+            <div className="max-w-xl text-center lg:text-left">
+              <h3 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">Join our Premium Circle</h3>
+              <p className="text-gray-600 font-medium">Get exclusive access to secret collections, early launches, and daily gifting inspiration.</p>
             </div>
-            <div className="flex items-center gap-4 text-sm">
-              <span className="flex items-center gap-2 text-primary-400">
-                <Truck className="w-4 h-4" />
-                Same Day Delivery Available
-              </span>
-            </div>
+            <form className="w-full max-w-md">
+              <div className="flex flex-col sm:flex-row gap-3 p-1 bg-white border border-gray-200 rounded-2xl shadow-sm focus-within:border-amber-400 transition-all">
+                <input 
+                  type="email" 
+                  placeholder="Enter your email address"
+                  className="flex-1 bg-transparent px-5 py-3.5 text-sm focus:outline-none"
+                />
+                <Button className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl px-8 h-12 shadow-md">
+                  Subscribe
+                </Button>
+              </div>
+              <p className="mt-3 text-[10px] text-gray-400 text-center lg:text-left">By subscribing, you agree to our Privacy Policy and Terms of Service.</p>
+            </form>
           </div>
         </div>
       </div>
 
-      {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Brand Section */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
-          <div className="lg:col-span-2">
-            <Link to="/" className="flex items-center gap-2.5 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-primary-400 to-primary-600 flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">S</span>
+      {/* Feature Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-b border-gray-50">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+          {features.map((feature, index) => (
+            <div key={index} className="flex flex-col items-center text-center group">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-amber-100 transition-all duration-300">
+                <feature.icon className="w-6 h-6 text-amber-600" strokeWidth={1.5} />
               </div>
-              <div>
-                <span className="text-xl font-bold text-white">Shopeverse</span>
-                <p className="text-xs text-gray-400 -mt-0.5">Premium Gifts</p>
-              </div>
+              <h4 className="text-sm font-bold text-gray-900 mb-1">{feature.title}</h4>
+              <p className="text-xs text-gray-500 font-medium">{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Footer Links */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10">
+          <div className="col-span-2">
+            <Link to="/" className="inline-block mb-8">
+              <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-amber-800 tracking-tight">
+                ShopVista
+              </span>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Premium Gifting</p>
             </Link>
             
-            <p className="text-gray-400 mb-6 text-sm leading-relaxed">
-              Your destination for premium cakes, fresh flowers, and personalized gifts. 
-              Making every celebration memorable with same-day delivery across India and internationally.
+            <p className="text-gray-500 mb-8 text-sm leading-relaxed max-w-sm">
+              Crafting unforgettable moments since 2012. We are India's leading premium gifting destination, bringing you curated excellence with a touch of elegance.
             </p>
 
-            {/* Features */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <feature.icon className="w-4 h-4 text-primary-400" />
-                  <span className="text-xs text-gray-400">{feature.text}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Social Media */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {[Facebook, Twitter, Instagram, Linkedin].map((Icon, index) => (
                 <a
                   key={index}
                   href="#"
-                  className="w-9 h-9 rounded-lg bg-gray-800/50 flex items-center justify-center text-gray-400 hover:bg-primary-600 hover:text-white transition-all"
+                  className="w-10 h-10 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-all shadow-sm"
                 >
                   <Icon className="w-4 h-4" />
                 </a>
@@ -130,16 +130,12 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Recipient Links */}
-          <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">By Recipient</h4>
-            <ul className="space-y-2.5">
-              {footerLinks.recipient.map((link) => (
+          <div className="lg:col-span-1">
+            <h4 className="text-gray-900 font-bold mb-6 text-sm uppercase tracking-widest">Occasions</h4>
+            <ul className="space-y-4">
+              {footerLinks.occasions.slice(0, 6).map((link) => (
                 <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="text-gray-400 hover:text-primary-400 transition-colors text-sm"
-                  >
+                  <Link to={link.href} className="text-gray-500 hover:text-amber-600 transition-colors text-sm font-medium">
                     {link.name}
                   </Link>
                 </li>
@@ -147,16 +143,12 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Relationship Links */}
-          <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">By Relationship</h4>
-            <ul className="space-y-2.5">
-              {footerLinks.relationship.map((link) => (
+          <div className="lg:col-span-1">
+            <h4 className="text-gray-900 font-bold mb-6 text-sm uppercase tracking-widest">Gifts By</h4>
+            <ul className="space-y-4">
+              {footerLinks.recipient.slice(0, 6).map((link) => (
                 <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="text-gray-400 hover:text-primary-400 transition-colors text-sm"
-                  >
+                  <Link to={link.href} className="text-gray-500 hover:text-amber-600 transition-colors text-sm font-medium">
                     {link.name}
                   </Link>
                 </li>
@@ -164,16 +156,12 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Category Links */}
-          <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Categories</h4>
-            <ul className="space-y-2.5">
-              {footerLinks.category.map((link) => (
+          <div className="lg:col-span-1">
+            <h4 className="text-gray-900 font-bold mb-6 text-sm uppercase tracking-widest">Company</h4>
+            <ul className="space-y-4">
+              {footerLinks.company.map((link) => (
                 <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="text-gray-400 hover:text-primary-400 transition-colors text-sm"
-                  >
+                  <Link to={link.href} className="text-gray-500 hover:text-amber-600 transition-colors text-sm font-medium">
                     {link.name}
                   </Link>
                 </li>
@@ -181,101 +169,66 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Occasions Links */}
-          <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Occasions</h4>
-            <ul className="space-y-2.5">
-              {footerLinks.occasions.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="text-gray-400 hover:text-primary-400 transition-colors text-sm"
-                  >
-                    {link.name}
+          <div className="lg:col-span-1">
+            <h4 className="text-gray-900 font-bold mb-6 text-sm uppercase tracking-widest">Help</h4>
+            <ul className="space-y-4">
+              {['Privacy Policy', 'Shipping Policy', 'Refund Policy', 'Contact Support', 'FAQs', 'Sitemap'].map((item) => (
+                <li key={item}>
+                  <Link to="#" className="text-gray-500 hover:text-amber-600 transition-colors text-sm font-medium">
+                    {item}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
         </div>
+      </div>
 
-        {/* Company Links Section */}
-        <div className="border-t border-gray-800 pt-8">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-white font-semibold mb-4">Know About Shopeverse</h4>
-              <div className="flex flex-wrap gap-4">
-                {footerLinks.company.map((link) => (
-                  <Link
-                    key={link.name}
-                    to={link.href}
-                    className="text-gray-400 hover:text-primary-400 transition-colors text-sm"
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
+      {/* Global Presence & Payment */}
+      <div className="bg-gray-50/50 border-t border-gray-100 py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-8">
+            <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              <span>USA</span>
+              <span className="text-gray-200">/</span>
+              <span>UK</span>
+              <span className="text-gray-200">/</span>
+              <span>Canada</span>
+              <span className="text-gray-200">/</span>
+              <span>Australia</span>
+              <span className="text-gray-200">/</span>
+              <span>Europe</span>
+              <span className="text-gray-200">/</span>
+              <span>UAE</span>
             </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Policies</h4>
-              <div className="flex flex-wrap gap-4">
-                {['Privacy Policy', 'Terms of Service', 'Shipping Policy', 'Refund Policy', 'Cookie Policy'].map((link) => (
-                  <Link
-                    key={link}
-                    to={`/${link.toLowerCase().replace(' ', '-')}`}
-                    className="text-gray-400 hover:text-primary-400 transition-colors text-sm"
-                  >
-                    {link}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Payment & App Section */}
-        <div className="border-t border-gray-800 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            {/* Copyright */}
-            <p className="text-gray-500 text-sm">
-              © {currentYear} Shopeverse. All rights reserved.
-            </p>
-
-            {/* Payment Methods */}
-            <div className="flex items-center gap-3">
-              <span className="text-gray-500 text-sm flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
-                We accept:
-              </span>
-              <div className="flex gap-2">
-                {['Visa', 'MC', 'Amex', 'UPI', 'PayPal'].map((method) => (
-                  <div
-                    key={method}
-                    className="px-3 py-1.5 bg-gray-800/50 rounded-lg text-xs text-gray-400"
-                  >
-                    {method}
+            <div className="flex items-center gap-6">
+              <div className="flex gap-2 opacity-60">
+                {['Visa', 'Mastercard', 'UPI', 'PayPal', 'Amex'].map((m) => (
+                  <div key={m} className="px-3 py-1 bg-white border border-gray-200 rounded text-[10px] font-bold text-gray-400 uppercase">
+                    {m}
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* International */}
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
-              <Globe className="w-4 h-4" />
-              <span>Delivering globally</span>
+              <div className="h-4 w-px bg-gray-200 hidden sm:block" />
+              <div className="flex items-center gap-2 text-gray-500 text-xs font-semibold">
+                <Globe className="w-3.5 h-3.5 text-amber-600" />
+                India
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Made with love badge */}
-      <div className="border-t border-gray-800 py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-gray-500 text-xs flex items-center justify-center gap-2">
-            Made with <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" /> by Shopeverse Team
-            <span className="mx-2">|</span>
-            <span>Delivering happiness since 2024</span>
+      {/* Bottom Bar */}
+      <div className="py-6 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-center md:text-left text-gray-400 text-xs font-medium">
+            &copy; {currentYear} ShopVista. All rights reserved. Elegant solutions for every occasion.
           </p>
+          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+             Made with <Heart className="w-3 h-3 text-rose-500 fill-rose-500" /> for Celebration
+          </div>
         </div>
       </div>
     </footer>

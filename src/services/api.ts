@@ -2,7 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { store } from '../store'
 import { logoutUser } from '../store/slices/authSlice'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -25,25 +25,25 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as CustomAxiosRequestConfig | undefined
     const url = originalRequest?.url || ''
-    
-    const isAuthEndpoint = url.includes('/auth/login') || 
-                           url.includes('/auth/register') || 
-                           url.includes('/auth/refresh')
-    
+
+    const isAuthEndpoint = url.includes('/auth/login') ||
+      url.includes('/auth/register') ||
+      url.includes('/auth/refresh')
+
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true
-      
+
       const refreshToken = localStorage.getItem('refresh_token')
       if (refreshToken) {
         try {
           const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refresh_token: refreshToken,
           })
-          
+
           const { access_token, refresh_token: newRefreshToken } = response.data.data
           localStorage.setItem('access_token', access_token)
           localStorage.setItem('refresh_token', newRefreshToken)
-          
+
           originalRequest.headers.Authorization = `Bearer ${access_token}`
           return api(originalRequest)
         } catch {

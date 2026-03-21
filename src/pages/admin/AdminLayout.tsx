@@ -1,30 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
 import {
-  Package,
-  LayoutDashboard,
-  ShoppingCart,
-  UserCog,
-  Megaphone,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  User,
-  LogOut,
-  Menu,
-  X,
-  Tag,
-  Store,
-  Sparkles,
+  Package, LayoutDashboard, ShoppingBag, Users, Mail,
+  ChevronLeft, ChevronRight, User, LogOut, Menu, X,
+  Tag, Compass
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu'
 import { useAppSelector, useAppDispatch } from '../../store/hooks'
@@ -36,9 +21,9 @@ const sidebarItems = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
   { label: 'Products', icon: Package, href: '/admin/products' },
   { label: 'Categories', icon: Tag, href: '/admin/categories' },
-  { label: 'Orders', icon: ShoppingCart, href: '/admin/orders' },
-  { label: 'Customers', icon: UserCog, href: '/admin/customers' },
-  { label: 'CRM', icon: Megaphone, href: '/admin/crm' },
+  { label: 'Orders', icon: ShoppingBag, href: '/admin/orders' },
+  { label: 'Customers', icon: Users, href: '/admin/customers' },
+  { label: 'Marketing', icon: Mail, href: '/admin/crm' },
 ]
 
 export default function AdminLayout() {
@@ -48,197 +33,118 @@ export default function AdminLayout() {
   const { user, isAuthenticated } = useAppSelector((state) => state.auth)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   useEffect(() => {
     const checkMobile = () => {
-      const mobile = window.innerWidth < 1024
-      if (mobile) {
-        setSidebarCollapsed(false)
-      }
+      if (window.innerWidth < 1024) setSidebarCollapsed(false)
     }
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  useEffect(() => {
-    setIsMobileMenuOpen(false)
-  }, [location.pathname])
-
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [isMobileMenuOpen])
+  useEffect(() => setIsMobileMenuOpen(false), [location.pathname])
 
   const isActive = (href: string) => {
     if (href === '/admin') return location.pathname === '/admin'
     return location.pathname.startsWith(href)
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery)}`)
-    }
-  }
-
   const handleLogout = () => {
-    dispatch(addToast({ type: 'info', title: 'Logged out', message: 'See you soon.' }))
+    dispatch(addToast({ type: 'info', title: 'Logout Successful', message: 'You have been securely logged out from the admin panel.' }))
     dispatch(logoutUser())
     navigate('/')
   }
 
-  const userDisplayName = user?.first_name && user?.last_name
-    ? `${user.first_name} ${user.last_name}`
-    : user?.name || 'User'
-  const userInitial = user?.first_name?.charAt(0) || user?.name?.charAt(0) || 'U'
+  const userDisplayName = user?.first_name ? `${user.first_name} ${user.last_name || ''}` : 'Admin'
 
   return (
-    <div className="min-h-screen">
-      <header
-        className={cn(
-          'fixed inset-x-0 top-0 z-50 border-b border-amber-100 bg-white/92 backdrop-blur-xl transition-shadow',
-          isScrolled && 'shadow-surface-sm'
-        )}
-      >
-        <div className="app-container">
-          <div className="flex h-[74px] items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setIsMobileMenuOpen(true)}
-                aria-label="Open admin menu"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-
-              <Link to="/admin" className="flex items-center gap-2.5">
-
-                <div className="leading-tight">
-                  <p className="text-lg font-bold text-gray-900">Shopiverse</p>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-600">Admin Console</p>
-                </div>
-              </Link>
-            </div>
-{/* 
-            <form onSubmit={handleSearch} className="hidden flex-1 max-w-md lg:flex">
-              <div className="relative w-full">
-                <Input
-                  type="search"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-10 rounded-full pl-10"
-                />
-                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+    <div className="min-h-screen bg-[#faf9f6]">
+      {/* Top Header */}
+      <header className={cn(
+        "fixed top-0 right-0 z-50 border-b border-gray-200 bg-white transition-all duration-300",
+        sidebarCollapsed ? 'lg:left-20' : 'lg:left-72',
+        'left-0'
+      )}>
+        <div className="flex h-16 items-center justify-between px-6">
+          <div className="flex items-center gap-4">
+            <button
+              className="lg:hidden text-gray-900 focus:outline-none"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <Link to="/admin" className="flex items-center gap-3">
+              <div className="link leading-tight">
+                <p className="text-xl font-serif text-amber-950">ShopVista</p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-amber-800">Management Console</p>
               </div>
-            </form> */}
-
-            <div className="flex items-center gap-2">
-              {isAuthenticated ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex h-10 items-center gap-2 rounded-xl px-2.5">
-                      <Avatar className="h-8 w-8 ring-2 ring-amber-100">
-                        <AvatarImage src={user?.avatar_url || user?.avatar} alt={userDisplayName} />
-                        <AvatarFallback className="bg-amber-100 text-amber-700">{userInitial}</AvatarFallback>
-                      </Avatar>
-                      <span className="hidden max-w-[130px] truncate text-sm font-semibold text-gray-700 sm:block">{userDisplayName}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-60 rounded-2xl border-amber-100 bg-white/95 shadow-surface-md">
-                    <div className="border-b border-amber-100 px-3 py-3">
-                      <p className="font-medium text-gray-900">{userDisplayName}</p>
-                      <p className="text-xs text-gray-500">{user?.email}</p>
-                    </div>
-                    <div className="py-1.5">
-                      <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer py-2.5">
-                        <User className="mr-2.5 h-4 w-4 text-primary" />
-                        My Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/')} className="cursor-pointer py-2.5">
-                        <Store className="mr-2.5 h-4 w-4 text-primary" />
-                        Back to Store
-                      </DropdownMenuItem>
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
-                      <LogOut className="mr-2.5 h-4 w-4" />
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>Login</Button>
-                  <Button size="sm" onClick={() => navigate('/register')}>Sign up</Button>
-                </div>
-              )}
-            </div>
+            </Link>
           </div>
 
-          {/* <form onSubmit={handleSearch} className="pb-3 lg:hidden">
-            <div className="relative">
-              <Input
-                type="search"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 rounded-full pl-10"
-              />
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            </div>
-          </form> */}
+          <div className="flex items-center gap-4">
+            {isAuthenticated && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex h-10 items-center gap-4 focus:outline-none group">
+                    <div className="w-10 h-10 border border-gray-200 bg-white flex items-center justify-center text-gray-900 text-xs font-serif uppercase group-hover:border-amber-800 transition-colors">
+                      {userDisplayName.charAt(0)}
+                    </div>
+                    <div className="hidden sm:block text-left">
+                      <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-gray-900">{userDisplayName}</span>
+                      <span className="block text-[9px] uppercase tracking-widest text-amber-700 font-semibold">Super Admin</span>
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 rounded-none border border-gray-200 bg-white shadow-2xl p-0">
+                  <div className="py-2 flex flex-col">
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="px-6 py-4 cursor-pointer rounded-none hover:bg-[#faf9f6] focus:bg-[#faf9f6] text-gray-900 transition-colors text-[10px] uppercase tracking-[0.2em] font-bold border-b border-gray-100 last:border-b-0">
+                      <User className="mr-3 h-4 w-4 text-amber-800" /> My Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/')} className="px-6 py-4 cursor-pointer rounded-none hover:bg-[#faf9f6] focus:bg-[#faf9f6] text-gray-900 transition-colors text-[10px] uppercase tracking-[0.2em] font-bold">
+                      <Compass className="mr-3 h-4 w-4 text-amber-800" /> View Store
+                    </DropdownMenuItem>
+                  </div>
+                  <div className="border-t border-gray-200 py-0">
+                    <DropdownMenuItem onClick={handleLogout} className="px-6 py-4 cursor-pointer rounded-none bg-red-50 hover:bg-red-100 focus:bg-red-100 text-red-900 transition-colors text-[10px] uppercase tracking-[0.2em] font-bold">
+                      <LogOut className="mr-3 h-4 w-4" /> Logout
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
       </header>
 
+      {/* Mobile Drawer Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/35 backdrop-blur-sm lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+        <div className="fixed inset-0 z-40 bg-amber-950/20 backdrop-blur-sm lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
       )}
 
+      {/* Sidebar Navigation */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 border-r border-amber-100 bg-white pt-[74px] transition-transform duration-300 lg:translate-x-0',
-          sidebarCollapsed ? 'lg:w-24' : 'lg:w-72',
-          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-          'w-[300px]'
+          'fixed inset-y-0 left-0 z-50 border-r border-gray-100 bg-[#faf9f6] pt-16 transition-all duration-300',
+          sidebarCollapsed ? 'w-20 lg:w-20' : 'w-72',
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        <div className="flex h-full flex-col p-3">
-          <div className="mb-2 flex items-center justify-between px-1 lg:hidden">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500">Navigation</p>
-            <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+        <div className="flex h-full flex-col py-8">
+          {!sidebarCollapsed && (
+            <div className="px-8 mb-8">
+               <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">Admin Dashboard</div>
+            </div>
+          )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarCollapsed((prev) => !prev)}
-            className={cn('mb-3 hidden justify-start lg:flex', sidebarCollapsed && 'justify-center')}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="flex items-center gap-4 px-8 py-2 text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 hover:text-amber-800 transition-colors mb-6"
           >
-            {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            {!sidebarCollapsed && <span className="ml-2">Collapse</span>}
-          </Button>
+            {sidebarCollapsed ? <ChevronRight className="h-4 w-4 mx-auto" /> : <><ChevronLeft className="h-4 w-4" /> Collapse Panel</>}
+          </button>
 
-          <nav className="space-y-1.5">
+          <nav className="flex-1">
             {sidebarItems.map((item) => (
               <Link
                 key={item.href}
@@ -246,36 +152,38 @@ export default function AdminLayout() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 title={sidebarCollapsed ? item.label : undefined}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors',
+                  'flex items-center gap-5 px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-l-4 border-b border-gray-200/50 first:border-t',
                   isActive(item.href)
-                    ? 'bg-amber-100/80 text-amber-800'
-                    : 'text-gray-600 hover:bg-amber-100/70 hover:text-gray-900',
-                  sidebarCollapsed && 'justify-center px-2'
+                    ? 'border-l-amber-700 bg-white text-amber-950 shadow-[0_0_20px_rgba(180,83,9,0.05)]'
+                    : 'border-l-transparent text-gray-500 hover:text-amber-800 hover:bg-white/40',
+                  sidebarCollapsed && 'justify-center border-l-0 px-0'
                 )}
               >
-                <item.icon className="h-5 w-5 shrink-0" />
+                <item.icon className={cn("h-4 w-4", isActive(item.href) ? "text-amber-800" : "opacity-60")} />
                 {!sidebarCollapsed && <span>{item.label}</span>}
               </Link>
             ))}
           </nav>
 
-          <div className="mt-auto border-t border-amber-100 pt-3">
+          <div className="mt-auto border-t border-gray-200/50 pt-2">
             <Link
               to="/"
+              title={sidebarCollapsed ? "Visit Store" : undefined}
               className={cn(
-                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-amber-100/70 hover:text-gray-900',
-                sidebarCollapsed && 'justify-center px-2'
+                'flex items-center gap-5 px-8 py-5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-l-4 border-l-transparent text-gray-500 hover:text-amber-800 hover:bg-white/40',
+                sidebarCollapsed && 'justify-center border-l-0 px-0'
               )}
             >
-              <Store className="h-5 w-5 shrink-0" />
-              {!sidebarCollapsed && <span>Back to Store</span>}
+              <Compass className="h-4 w-4 opacity-60" />
+              {!sidebarCollapsed && <span>Visit Store</span>}
             </Link>
           </div>
         </div>
       </aside>
 
-      <div className={cn('min-h-screen pt-[122px] lg:pt-[82px]', sidebarCollapsed ? 'lg:pl-24' : 'lg:pl-72')}>
-        <main className="px-3 pb-6 pt-3 sm:px-4 lg:px-6 lg:pt-5">
+      {/* Main Content Area */}
+      <div className={cn('min-h-screen pt-16 transition-all duration-300', sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72')}>
+        <main className="p-6 lg:p-10 max-w-[1600px] mx-auto">
           <Outlet context={{ sidebarCollapsed }} />
         </main>
       </div>
